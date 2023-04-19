@@ -1,7 +1,7 @@
 import { AdminPostDto } from './dto/post.admin.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { User, UsersInSpaces } from '@prisma/client';
+import { User, UsersInSpaces, Role, Auth } from '@prisma/client';
 import { UserPostDto } from './dto/post.user.dto';
 
 @Injectable()
@@ -35,8 +35,27 @@ export class PostRepository {
     });
   }
 
-  /*async findPostById(postid: number, email: string, spaceId: number){
-    await this.prismaService.usersInSpaces.findFirstOrThrow({ where: { }})
-    return await this.prismaService.
-  }*/
+  async findPostById(
+    postid: number,
+    userId: number,
+    email: string,
+    spaceId: number,
+  ) {
+    const userinspace = await this.prismaService.usersInSpaces.findFirstOrThrow(
+      {
+        where: {
+          userId: userId,
+          spaceId: spaceId,
+        },
+        include: { user: true, role: true },
+      },
+    );
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postid },
+    });
+    if (userinspace.role.auth === Auth.ADMIN || post.authoremail === email) {
+      return null;
+    }
+    return null;
+  }
 }

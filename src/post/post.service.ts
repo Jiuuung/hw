@@ -1,3 +1,4 @@
+import { IsEmail } from 'class-validator';
 import { UserRepository } from 'src/users/users.repository';
 import { Injectable } from '@nestjs/common';
 import { SpaceRepository } from 'src/space/space.repository';
@@ -30,13 +31,14 @@ export class PostService {
     }
   }
 
-  /*async seePost(spacename: string, postid: number, user) {
+  async seePost(spacename: string, postid: number, user) {
     const space = await this.spaceRepository.findSpaceByName(spacename);
-    const userId = await this.spaceRe
+    const userId = await this.spaceRepository.getUserId(user.IsEmail);
     const post = await this.postRepository.findPostById(
       postid,
+      userId.id,
       user.email,
       space.id,
     );
-  }*/
+  }
 }

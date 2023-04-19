@@ -28,7 +28,6 @@ export class PostController {
     return await this.postService.makePost(param.spacename, body, req.user);
   }
 
-  /*
   @UseGuards(JwtAuthGuard)
   @Get('see/:spacename/:postid')
   async seePost(@Param() param, @Req() req: Request) {
@@ -37,5 +36,5 @@ export class PostController {
       param.postid,
       req.user,
     );
-  }*/
+  }
 }
