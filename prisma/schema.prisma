@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    Int     @default(autoincrement()) @id
+  email String @unique
+  password String
+  first_name String
+  last_name String
+  imgUrl String?
+  isDeleted Boolean @default(false)
+  refresh_token String?
+  spaces UsersInSpaces[]
+  post Post[]
+}
+
+model Space{
+  id Int @default(autoincrement()) @id
+  name String @unique
+  isDeleted Boolean @default(false)
+  access_code_manager String
+  access_code_participation String
+  users UsersInSpaces[]
+  role Role[]
+  post Post[]
+}
+
+enum Auth{
+  USER
+  ADMIN
+}
+model Role {
+  id Int @default(autoincrement()) @id
+  name String
+  auth Auth @default(USER)
+  isDeleted Boolean @default(false)
+  userinspace UsersInSpaces[]
+  spacerole Space @relation(fields: [spacename], references:[name])
+  spacename String
+  @@unique(fields: [name, spacename], name: "roleinspace")
+}
+
+model UsersInSpaces{
+  user User @relation(fields: [userId], references:[id])
+  userId Int
+  space Space @relation(fields: [spaceId], references:[id])
+  spaceId Int
+  role Role @relation(fields: [roleId], references:[id])
+  roleId Int
+  @@unique(fields: [userId, spaceId], name:"userspace")
+  @@id([userId, spaceId,roleId])
+}
+
+model Post{
+  id Int @default(autoincrement()) @id
+  title String
+  content String
+  author User @relation(fields: [authoremail], references:[email])
+  authoremail String
+  space Space @relation(fields: [spacename], references:[name])
+  spacename String
+  isAnonymous Boolean @default(false)
+  isNotice Boolean @default(false)
+  isDeleted Boolean @default(false)
+  fileurl String?
+}
