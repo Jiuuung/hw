@@ -8,6 +8,7 @@ import {
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtService } from '@nestjs/jwt';
+import { UserReturnDto } from 'src/users/dto/users.return.dto';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -19,7 +20,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload?: { email: string; sub: number }) {
+  async validate(payload?: {
+    email: string;
+    sub: number;
+  }): Promise<UserReturnDto> {
     const user = await this.userRepository.findUserWithoutPassword(payload.sub);
     if (user) {
       return user;

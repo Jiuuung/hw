@@ -5,6 +5,12 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { MakeSpaceDto } from './dto/space.request.dto';
 import { User, Auth } from '@prisma/client';
 import { ChangeRoleDto } from './dto/space.changerole.dto';
+import {
+  MkOrChangeRoleReturnDto,
+  SpaceCodeManagerReturnDto,
+  SpaceCreateReturnDto,
+  SpaceJoinReturnDto,
+} from './dto/space.return.dto';
 
 @Injectable()
 export class SpaceService {
@@ -13,7 +19,7 @@ export class SpaceService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async makeSpace(name: string, user: any) {
+  async makeSpace(name: string, user: any): Promise<SpaceCreateReturnDto> {
     const cur_user = await this.userRepository.findByEmail(user.email);
     if (!cur_user) {
       throw new UnauthorizedException('no user found');
@@ -23,7 +29,10 @@ export class SpaceService {
     }
   }
 
-  async checkCodeManager(name: string, user: any) {
+  async checkCodeManager(
+    name: string,
+    user: any,
+  ): Promise<SpaceCodeManagerReturnDto> {
     const cur_user = await this.userRepository.findByEmail(user.email);
     if (!cur_user) {
       throw new UnauthorizedException('no user found');
@@ -45,7 +54,12 @@ export class SpaceService {
     }
   }
 
-  async joinSpace(space: string, code: string, rolename: string, user: User) {
+  async joinSpace(
+    space: string,
+    code: string,
+    rolename: string,
+    user: User,
+  ): Promise<SpaceJoinReturnDto> {
     const cur_user = await this.userRepository.findByEmail(user.email);
     if (!cur_user) {
       throw new UnauthorizedException('no user found');
@@ -71,7 +85,7 @@ export class SpaceService {
     user: UserRequestDto,
     spacename: string,
     rolename: string,
-  ) {
+  ): Promise<User[]> {
     const space = await this.spaceRepository.findSpaceByName(spacename);
     if (!space) {
       throw new UnauthorizedException('no space found');
@@ -91,8 +105,8 @@ export class SpaceService {
     userlist: ChangeRoleDto[],
     email: string,
     spacename: string,
-  ) {
-    const isUserInSpace = await this.spaceRepository.isUserInSpaceWithAuth(
+  ): Promise<boolean> {
+    const isUserInSpace = await this.spaceRepository.GetAdminUserInSpace(
       email,
       spacename,
     );
@@ -113,9 +127,9 @@ export class SpaceService {
     auth: string,
     spacename: string,
     email: string,
-  ) {
+  ): Promise<MkOrChangeRoleReturnDto> {
     const isuserinspacewithadmin =
-      await this.spaceRepository.isUserInSpaceWithAuth(email, spacename);
+      await this.spaceRepository.GetAdminUserInSpace(email, spacename);
     let newauth: Auth;
     if (isuserinspacewithadmin) {
       if (auth === 'admin') {
@@ -135,9 +149,13 @@ export class SpaceService {
     }
   }
 
-  async deleteRole(spacename: string, rolename: string, email: string) {
+  async deleteRole(
+    spacename: string,
+    rolename: string,
+    email: string,
+  ): Promise<boolean> {
     const isuserinspacewithadmin =
-      await this.spaceRepository.isUserInSpaceWithAuth(email, spacename);
+      await this.spaceRepository.GetAdminUserInSpace(email, spacename);
     if (isuserinspacewithadmin) {
       return await this.spaceRepository.deleteRole(spacename, rolename);
     } else {

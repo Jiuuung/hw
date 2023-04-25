@@ -2,10 +2,11 @@ import { jwtConstants } from './constants';
 import { IsEmail } from 'class-validator';
 import { UserRepository } from '../users/users.repository';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { LoginRequestDto } from './dto/login.request.dto';
+import { GetTokenReturnDto, LoginRequestDto } from './dto/login.request.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { Payload } from './jwt/jwt.payload';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +17,7 @@ export class AuthService {
 
   async jwtLogin(data: LoginRequestDto): Promise<any> {
     const { email, password } = data;
-    const user = await this.userRepository.findByEmail(email);
+    const user = await this.userRepository.findByEmailWithPassword(email);
     if (!user) {
       throw new UnauthorizedException('이메일을 확인하세요.');
     }
@@ -36,19 +37,22 @@ export class AuthService {
     return tokens;
   }
 
-  async updateRefreshToken(id: number, refresh_token: string) {
+  async updateRefreshToken(
+    id: number,
+    refresh_token: string,
+  ): Promise<boolean> {
     return await this.userRepository.updateRefreshToken(id, refresh_token);
   }
 
-  async logout(userId: number) {
+  async logout(userId: number): Promise<boolean> {
     return await this.userRepository.logout(userId);
   }
 
-  async getTokens(payload: { email: string; sub: number }, id: number) {
+  async getTokens(payload: Payload, id: number): Promise<GetTokenReturnDto> {
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: jwtConstants.access_secret,
-        expiresIn: '1h',
+        expiresIn: '1y',
       }),
       this.jwtService.signAsync(payload, {
         secret: jwtConstants.refresh_secret,
@@ -58,7 +62,7 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  async refreshToken(id: number, refresh_token: string) {
+  async refreshToken(id: number, refresh_token: string): Promise<string> {
     const user = await this.userRepository.findUserWithoutPassword(id);
     if (!user || !user.refresh_token) {
       throw new UnauthorizedException('user 없다. 또는 refresh token 없다.');

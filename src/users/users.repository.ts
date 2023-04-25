@@ -1,3 +1,11 @@
+import {
+  UserReturnDto,
+  UserCreateReturnDto,
+  UserDeleteInputDto,
+  UserDeleteReturnDto,
+  UserRefreshTokenUpdateDto,
+  UserReturnDtoWithPasswordDto,
+} from './dto/users.return.dto';
 import { RefreshTokenStrategy } from './../auth/jwt/refresh.strategy';
 import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
@@ -9,22 +17,25 @@ import { UserRequestDto } from 'src/users/dto/users.request.dto';
 export class UserRepository {
   constructor(private prisma: PrismaService) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    const user = await this.prisma.user.findFirst({
-      where: { email, isDeleted: false },
+  async findByEmailWithPassword(
+    email: string,
+  ): Promise<UserReturnDtoWithPasswordDto | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
     });
     return user;
   }
-  async findUserWithoutPassword(id: number): Promise<{
-    email: string;
-    first_name: string;
-    last_name: string;
-    refresh_token: string;
-    imgUrl: string | null;
-  } | null> {
-    const user = await this.prisma.user.findFirst({
-      where: { id, isDeleted: false },
+  async findByEmail(email: string): Promise<UserReturnDto | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    return user;
+  }
+  async findUserWithoutPassword(id: number): Promise<UserReturnDto | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
       select: {
+        id: true,
         email: true,
         first_name: true,
         last_name: true,
@@ -35,19 +46,7 @@ export class UserRepository {
     return user;
   }
 
-  async isExistByEmail(email: string): Promise<boolean> {
-    const isExist = await this.prisma.user.findFirst({
-      where: { email: email, isDeleted: false },
-    });
-    if (!isExist) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-  async create(
-    user: UserRequestDto,
-  ): Promise<{ email: string; first_name: string; last_name: string }> {
+  async create(user: UserRequestDto): Promise<UserCreateReturnDto> {
     const { email, first_name, last_name, password } = user;
     return await this.prisma.user.create({
       select: { email: true, first_name: true, last_name: true },
@@ -55,26 +54,38 @@ export class UserRepository {
     });
   }
 
-  async delete(users: { id: number }) {
+  async delete(users: UserDeleteInputDto): Promise<UserDeleteReturnDto> {
     await this.prisma.usersInSpaces.deleteMany({ where: { userId: users.id } });
-    return await this.prisma.user.update({
+    return await this.prisma.user.delete({
       where: { id: users.id },
-      data: { isDeleted: true },
     });
   }
 
-  async updateRefreshToken(userId: number, refreshToken: string) {
+  async updateRefreshToken(
+    userId: number,
+    refreshToken: string,
+  ): Promise<boolean> {
     const hashrefreshToken = await argon2.hash(refreshToken);
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { refresh_token: hashrefreshToken },
-    });
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { refresh_token: hashrefreshToken },
+      });
+    } catch (err) {
+      throw err;
+    }
+    return true;
   }
 
-  async logout(userId: number) {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { refresh_token: null },
-    });
+  async logout(userId: number): Promise<boolean> {
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { refresh_token: null },
+      });
+    } catch (err) {
+      throw err;
+    }
+    return true;
   }
 }

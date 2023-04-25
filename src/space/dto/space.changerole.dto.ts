@@ -1,4 +1,10 @@
-import { IsDecimal, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsDecimal,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 
 export class ChangeRoleDto {
   @IsNumber()

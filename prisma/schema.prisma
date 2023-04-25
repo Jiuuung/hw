@@ -17,7 +17,6 @@ model User {
   first_name String
   last_name String
   imgUrl String?
-  isDeleted Boolean @default(false)
   refresh_token String?
   spaces UsersInSpaces[]
   post Post[]

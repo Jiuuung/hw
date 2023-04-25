@@ -5,7 +5,7 @@ import * as expressBasicAuth from 'express-basic-auth';
 import { HttpExceptionFilter } from './common/exception/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());

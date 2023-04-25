@@ -3,12 +3,20 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { User, UsersInSpaces, Role, Auth } from '@prisma/client';
 import { UserPostDto } from './dto/post.user.dto';
+import {
+  MakePostAdminReturnDto,
+  MakePostUserReturnDto,
+} from './dto/post.return.dto';
 
 @Injectable()
 export class PostRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async makeAdminPost(spacename: string, body: AdminPostDto, email: string) {
+  async makeAdminPost(
+    spacename: string,
+    body: AdminPostDto,
+    email: string,
+  ): Promise<MakePostAdminReturnDto> {
     return await this.prismaService.post.create({
       data: {
         title: body.title,
@@ -17,14 +25,19 @@ export class PostRepository {
         space: { connect: { name: spacename } },
         isNotice: body.notice,
       },
+      select: { title: true, author: true, space: true, isNotice: true },
     });
   }
 
-  async makeUserPost(spacename: string, body: UserPostDto, email: string) {
+  async makeUserPost(
+    spacename: string,
+    body: UserPostDto,
+    email: string,
+  ): Promise<MakePostUserReturnDto> {
     const user = await this.prismaService.user.findFirstOrThrow({
-      where: { email: email, isDeleted: false },
+      where: { email: email },
     });
-    return await this.prismaService.post.create({
+    const post = await this.prismaService.post.create({
       data: {
         title: body.title,
         content: body.content,
@@ -32,10 +45,12 @@ export class PostRepository {
         space: { connect: { name: spacename } },
         isAnonymous: body.anonymous,
       },
+      select: { title: true, author: true, space: true, isAnonymous: true },
     });
+    return post;
   }
 
-  async findPostById(
+  /*async findPostById(
     postid: number,
     userId: number,
     email: string,
@@ -57,5 +72,5 @@ export class PostRepository {
       return null;
     }
     return null;
-  }
+  }*/
 }

@@ -15,6 +15,10 @@ import { HttpExceptionFilter } from 'src/common/exception/http-exception.filter'
 import { ScuccessInterceptor } from 'src/common/interceptor/success.interceptor';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt/access.guard';
+import {
+  MakePostAdminReturnDto,
+  MakePostUserReturnDto,
+} from './dto/post.return.dto';
 
 @Controller('post')
 @UseInterceptors(ScuccessInterceptor)
@@ -24,11 +28,15 @@ export class PostController {
 
   @UseGuards(JwtAuthGuard)
   @Post('make/:spacename')
-  async makePost(@Param() param, @Body() body, @Req() req: Request) {
+  async makePost(
+    @Param() param,
+    @Body() body,
+    @Req() req: Request,
+  ): Promise<MakePostUserReturnDto | MakePostAdminReturnDto> {
     return await this.postService.makePost(param.spacename, body, req.user);
   }
 
-  @UseGuards(JwtAuthGuard)
+  /*@UseGuards(JwtAuthGuard)
   @Get('see/:spacename/:postid')
   async seePost(@Param() param, @Req() req: Request) {
     return await this.postService.seePost(
@@ -36,5 +44,5 @@ export class PostController {
       param.postid,
       req.user,
     );
-  }
+  }*/
 }

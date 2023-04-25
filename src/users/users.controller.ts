@@ -19,6 +19,10 @@ import { LoginRequestDto } from 'src/auth/dto/login.request.dto';
 import { JwtAuthGuard } from 'src/auth/jwt/access.guard';
 import { Request } from 'express';
 import { RefreshTokenGuard } from 'src/auth/jwt/refresh.guard';
+import {
+  UserCreateReturnDto,
+  UserDeleteReturnDto,
+} from './dto/users.return.dto';
 
 @Controller('users')
 @UseInterceptors(ScuccessInterceptor)
@@ -31,43 +35,43 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  getCurrentUser(@Req() req: Request) {
+  getCurrentUser(@Req() req: Request): Express.User {
     return req.user;
-  }
+  } //for testing purposes
 
   @Post('signup')
-  async signUp(@Body() body: UserRequestDto) {
+  async signUp(@Body() body: UserRequestDto): Promise<UserCreateReturnDto> {
     console.log(body);
     return this.usersService.signUp(body);
   }
 
   @Post('login')
-  login(@Body() body: LoginRequestDto) {
+  login(@Body() body: LoginRequestDto): Promise<any> {
     return this.authService.jwtLogin(body);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  logout(@Req() req: Request) {
+  logout(@Req() req: Request): Promise<boolean> {
     return this.authService.logout(req.user['sub']);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('delete')
-  async delete(@Req() req: Request) {
+  async delete(@Req() req: Request): Promise<UserDeleteReturnDto> {
     return this.usersService.delete(req.user);
   }
 
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
-  async refresh(@Req() req: Request) {
+  async refresh(@Req() req: Request): Promise<string> {
     const userId = req.user['sub'];
     const refreshToken = req.user['refreshToken'];
     return this.authService.refreshToken(userId, refreshToken);
   }
 
   @Post('upload/profileimg')
-  uploadProfileImage() {
+  uploadProfileImage(): string {
     return 'upload';
-  }
+  } // not implemented yet
 }
