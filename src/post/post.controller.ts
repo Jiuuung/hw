@@ -19,6 +19,7 @@ import {
   MakePostAdminReturnDto,
   MakePostUserReturnDto,
 } from './dto/post.return.dto';
+import { AuthorizationUserGuard } from 'src/auth/jwt/authorizationuser.gurard';
 
 @Controller('post')
 @UseInterceptors(ScuccessInterceptor)
@@ -26,7 +27,7 @@ import {
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthorizationUserGuard)
   @Post('make/:spacename')
   async makePost(
     @Param() param,

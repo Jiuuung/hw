@@ -1,3 +1,4 @@
+import { UserReturnDto } from './../users/dto/users.return.dto';
 import { UserRequestDto } from './../users/dto/users.request.dto';
 import { UserRepository } from 'src/users/users.repository';
 import { SpaceRepository } from './space.repository';
@@ -41,15 +42,7 @@ export class SpaceService {
       if (!tar_space) {
         throw new UnauthorizedException('no space found');
       } else {
-        const userRole = await this.spaceRepository.checkUserRoleInSpace(
-          tar_space.id,
-          cur_user.id,
-        );
-        if (userRole.auth === Auth.ADMIN) {
-          return await this.spaceRepository.checkCodeManager(tar_space.id);
-        } else {
-          throw new UnauthorizedException('only admin can check code');
-        }
+        return await this.spaceRepository.checkCodeManager(tar_space.id);
       }
     }
   }
@@ -85,22 +78,15 @@ export class SpaceService {
     user: UserRequestDto,
     spacename: string,
     rolename: string,
-  ): Promise<User[]> {
+  ): Promise<UserReturnDto[]> {
     const space = await this.spaceRepository.findSpaceByName(spacename);
     if (!space) {
       throw new UnauthorizedException('no space found');
     } else {
-      const isInSpace = await this.spaceRepository.isUserInSpace(
-        user.email,
-        spacename,
-      );
-      if (isInSpace) {
-        return await this.spaceRepository.allUsersWithRole(rolename, spacename);
-      } else {
-        throw new UnauthorizedException('user is not in space');
-      }
+      return await this.spaceRepository.allUsersWithRole(rolename, spacename);
     }
   }
+
   async changeRoleInSpace(
     userlist: ChangeRoleDto[],
     email: string,
@@ -110,16 +96,12 @@ export class SpaceService {
       email,
       spacename,
     );
-    if (isUserInSpace) {
-      const result = await this.spaceRepository.changeRole(
-        userlist,
-        spacename,
-        isUserInSpace,
-      );
-      return result;
-    } else {
-      throw new UnauthorizedException('only ADMIN can change role');
-    }
+    const result = await this.spaceRepository.changeRole(
+      userlist,
+      spacename,
+      isUserInSpace,
+    );
+    return result;
   }
 
   async makeOrChangeRole(
@@ -128,25 +110,19 @@ export class SpaceService {
     spacename: string,
     email: string,
   ): Promise<MkOrChangeRoleReturnDto> {
-    const isuserinspacewithadmin =
-      await this.spaceRepository.GetAdminUserInSpace(email, spacename);
     let newauth: Auth;
-    if (isuserinspacewithadmin) {
-      if (auth === 'admin') {
-        newauth = Auth.ADMIN;
-      } else if (auth === 'user') {
-        newauth = Auth.USER;
-      } else {
-        throw new UnauthorizedException('auth must be admin or user');
-      }
-      return await this.spaceRepository.makeOrChangeRole(
-        rolename,
-        newauth,
-        spacename,
-      );
+    if (auth === 'admin') {
+      newauth = Auth.ADMIN;
+    } else if (auth === 'user') {
+      newauth = Auth.USER;
     } else {
-      throw new UnauthorizedException('only ADMIN can change role');
+      throw new UnauthorizedException('auth must be admin or user');
     }
+    return await this.spaceRepository.makeOrChangeRole(
+      rolename,
+      newauth,
+      spacename,
+    );
   }
 
   async deleteRole(
@@ -154,12 +130,6 @@ export class SpaceService {
     rolename: string,
     email: string,
   ): Promise<boolean> {
-    const isuserinspacewithadmin =
-      await this.spaceRepository.GetAdminUserInSpace(email, spacename);
-    if (isuserinspacewithadmin) {
-      return await this.spaceRepository.deleteRole(spacename, rolename);
-    } else {
-      throw new UnauthorizedException('only ADMIN can delete role');
-    }
+    return await this.spaceRepository.deleteRole(spacename, rolename);
   }
 }

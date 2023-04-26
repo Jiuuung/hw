@@ -21,6 +21,9 @@ import {
   SpaceCreateReturnDto,
   SpaceJoinReturnDto,
 } from './dto/space.return.dto';
+import { UserReturnDto } from 'src/users/dto/users.return.dto';
+import { AuthorizationUserGuard } from 'src/auth/jwt/authorizationuser.gurard';
+import { AuthorizationAdminGuard } from 'src/auth/jwt/authorizationadmin.gurard';
 
 @Controller('space')
 export class SpaceController {
@@ -38,7 +41,7 @@ export class SpaceController {
     return this.spaceService.makeSpace(params.name, req.user);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthorizationAdminGuard)
   @Get('/checkcode/manager/:name')
   async checkCodeManager(
     @Param() params,
@@ -58,9 +61,9 @@ export class SpaceController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthorizationUserGuard)
   @Post('/users/:spacename/role/:rolename')
-  async userRoleInSpace(@Param() params, @Req() req): Promise<User[]> {
+  async userRoleInSpace(@Param() params, @Req() req): Promise<UserReturnDto[]> {
     //해당 공간 내에 해당 역할군에 포함되어 있는 유저들의 정보.
     return await this.spaceService.userRoleInSpace(
       req.user,
@@ -69,7 +72,7 @@ export class SpaceController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthorizationAdminGuard)
   @Post('/users/:spacename/changerole')
   async changeRoleInSpace(
     @Body(new ParseArrayPipe({ items: ChangeRoleDto }))
@@ -84,7 +87,7 @@ export class SpaceController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthorizationAdminGuard)
   @Get('/make/space/:spacename/role/:rolename/auth/:auth')
   async makeNewRole(
     @Param() param,
@@ -98,7 +101,7 @@ export class SpaceController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthorizationAdminGuard)
   @Get('/delete/space/:spacename/role/:rolename')
   async deleteRole(@Param() param, @Req() req): Promise<boolean> {
     return await this.spaceService.deleteRole(
