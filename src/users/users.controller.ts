@@ -11,6 +11,8 @@ import {
   UseFilters,
   UseGuards,
   Req,
+  Delete,
+  Put,
 } from '@nestjs/common';
 import { UserRequestDto } from './dto/users.request.dto';
 import { UsersService } from './users.service';
@@ -51,13 +53,13 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('logout')
+  @Put('logout')
   logout(@Req() req: Request): Promise<boolean> {
     return this.authService.logout(req.user['sub']);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('delete')
+  @Delete()
   async delete(@Req() req: Request): Promise<UserDeleteReturnDto> {
     return this.usersService.delete(req.user);
   }
@@ -70,7 +72,7 @@ export class UsersController {
     return this.authService.refreshToken(userId, refreshToken);
   }
 
-  @Post('upload/profileimg')
+  @Post('profileimg')
   uploadProfileImage(): string {
     return 'upload';
   } // not implemented yet

@@ -28,7 +28,7 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @UseGuards(AuthorizationUserGuard)
-  @Post('make/:spacename')
+  @Post('/:spacename')
   async makePost(
     @Param() param,
     @Body() body,
