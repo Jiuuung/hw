@@ -43,7 +43,6 @@ export class UsersController {
 
   @Post('signup')
   async signUp(@Body() body: UserRequestDto): Promise<UserCreateReturnDto> {
-    console.log(body);
     return this.usersService.signUp(body);
   }
 

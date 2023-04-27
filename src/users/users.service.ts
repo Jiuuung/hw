@@ -34,7 +34,6 @@ export class UsersService {
     const user: UserDeleteInputDto = await this.userRepository.findByEmail(
       users.email,
     );
-    console.log(user);
     return await this.userRepository.delete(user);
   }
 }

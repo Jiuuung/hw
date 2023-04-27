@@ -1,9 +1,11 @@
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as expressBasicAuth from 'express-basic-auth';
 import { HttpExceptionFilter } from './common/exception/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +27,8 @@ async function bootstrap(): Promise<void> {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
-  await app.listen(3000);
+  const configService = app.get(ConfigService);
+  const port = configService.get<string>('server.port');
+  await app.listen(port);
 }
 bootstrap();
