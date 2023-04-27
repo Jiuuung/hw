@@ -17,3 +17,13 @@ export class UserRequestDto {
   @IsNotEmpty()
   last_name: string;
 }
+
+export class UserFindInputDto {
+  @IsString()
+  @IsNotEmpty()
+  first_name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  last_name: string;
+}

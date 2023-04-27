@@ -14,7 +14,7 @@ import {
   Delete,
   Put,
 } from '@nestjs/common';
-import { UserRequestDto } from './dto/users.request.dto';
+import { UserFindInputDto, UserRequestDto } from './dto/users.request.dto';
 import { UsersService } from './users.service';
 import { HttpExceptionFilter } from 'src/common/exception/http-exception.filter';
 import { LoginRequestDto } from 'src/auth/dto/login.request.dto';
@@ -24,6 +24,7 @@ import { RefreshTokenGuard } from 'src/auth/jwt/refresh.guard';
 import {
   UserCreateReturnDto,
   UserDeleteReturnDto,
+  UserFindDto,
 } from './dto/users.return.dto';
 
 @Controller('users')
@@ -41,6 +42,10 @@ export class UsersController {
     return req.user;
   } //for testing purposes
 
+  @Get('find')
+  async findUsers(@Body() body: UserFindInputDto): Promise<UserFindDto[]> {
+    return await this.usersService.findUsers(body);
+  }
   @Post('signup')
   async signUp(@Body() body: UserRequestDto): Promise<UserCreateReturnDto> {
     return this.usersService.signUp(body);

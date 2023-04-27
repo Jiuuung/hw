@@ -26,6 +26,7 @@ export class AuthorizationUserGuard
     if (!space) {
       throw new UnauthorizedException('no spacename in params');
     }
+    console.log(user, space);
     const isInSpace = await this.spaceRepository.isUserInSpace(
       user.email,
       space,

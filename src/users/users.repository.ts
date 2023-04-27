@@ -1,3 +1,4 @@
+import { UserFindInputDto } from './dto/users.request.dto';
 import {
   UserReturnDto,
   UserCreateReturnDto,
@@ -5,6 +6,7 @@ import {
   UserDeleteReturnDto,
   UserRefreshTokenUpdateDto,
   UserReturnDtoWithPasswordDto,
+  UserFindDto,
 } from './dto/users.return.dto';
 import { RefreshTokenStrategy } from './../auth/jwt/refresh.strategy';
 import { Injectable } from '@nestjs/common';
@@ -17,17 +19,40 @@ import { UserRequestDto } from 'src/users/dto/users.request.dto';
 export class UserRepository {
   constructor(private prisma: PrismaService) {}
 
+  async findUsers(body: UserFindInputDto): Promise<UserFindDto[]> {
+    return await this.prisma.user.findMany({
+      where: { first_name: body.first_name, last_name: body.last_name },
+      select: { first_name: true, last_name: true, imgUrl: true },
+    });
+  }
   async findByEmailWithPassword(
     email: string,
   ): Promise<UserReturnDtoWithPasswordDto | null> {
     const user = await this.prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        first_name: true,
+        last_name: true,
+        imgUrl: true,
+        refresh_token: true,
+      },
     });
     return user;
   }
   async findByEmail(email: string): Promise<UserReturnDto | null> {
     const user = await this.prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        imgUrl: true,
+        refresh_token: true,
+      },
     });
     return user;
   }
@@ -58,6 +83,11 @@ export class UserRepository {
     await this.prisma.usersInSpaces.deleteMany({ where: { userId: users.id } });
     return await this.prisma.user.delete({
       where: { id: users.id },
+      select: {
+        email: true,
+        first_name: true,
+        last_name: true,
+      },
     });
   }
 

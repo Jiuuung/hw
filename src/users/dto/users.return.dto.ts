@@ -31,6 +31,11 @@ export class UserReturnDto extends OmitType(UserReturnDtoWithPasswordDto, [
   'password',
 ] as const) {}
 
+export class UserFindDto extends OmitType(UserReturnDto, [
+  'email',
+  'id',
+  'refresh_token',
+] as const) {}
 export class UserCreateReturnDto extends PickType(UserReturnDto, [
   'email',
   'first_name',

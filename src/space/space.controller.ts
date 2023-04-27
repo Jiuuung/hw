@@ -41,25 +41,35 @@ export class SpaceController {
   ) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post('new/:name')
+  @Post('new/space/:spacename')
   async makeSpace(
-    @Param() params,
+    @Body() body: MakeSpaceDto,
     @Req() req: Request,
-  ): Promise<SpaceCreateReturnDto> {
-    return this.spaceService.makeSpace(params.name, req.user);
+  ): Promise<boolean> {
+    if (body.manager_role.includes(body.my_role)) {
+      return this.spaceService.makeSpace(
+        body.spacename,
+        req.user,
+        body.manager_role,
+        body.user_role,
+        body.my_role,
+      );
+    } else {
+      throw new Error('my_role is not in manager_role set');
+    }
   }
 
   @UseGuards(AuthorizationAdminGuard)
-  @Get(':name')
+  @Get(':spacename')
   async checkCodeManager(
     @Param() params,
     @Req() req,
   ): Promise<SpaceCodeManagerReturnDto> {
-    return await this.spaceService.checkCodeManager(params.name, req.user);
+    return await this.spaceService.checkCodeManager(params.spacename, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('exist/:name')
+  @Post('exist/:spacename')
   async joinSpace(
     @Body() body: SpaceJoinBodyDto,
     @Req() req,
@@ -102,7 +112,7 @@ export class SpaceController {
   }
 
   @UseGuards(AuthorizationAdminGuard)
-  @Post('new/:rolename')
+  @Post('new/role/:spacename')
   async makeNewRole(
     @Body() body: SpaceMakeRoleBodyDto,
     @Req() req,
@@ -116,7 +126,7 @@ export class SpaceController {
   }
 
   @UseGuards(AuthorizationAdminGuard)
-  @Delete('role')
+  @Delete('role/:spacenam')
   async deleteRole(
     @Body() body: SpaceDeleteRoleBodyDto,
     @Req() req,

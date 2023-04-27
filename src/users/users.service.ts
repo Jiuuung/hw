@@ -1,5 +1,5 @@
 import { UserRepository } from './users.repository';
-import { UserRequestDto } from './dto/users.request.dto';
+import { UserFindInputDto, UserRequestDto } from './dto/users.request.dto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -7,12 +7,16 @@ import {
   UserCreateReturnDto,
   UserDeleteInputDto,
   UserDeleteReturnDto,
+  UserFindDto,
 } from './dto/users.return.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private userRepository: UserRepository) {}
 
+  async findUsers(body: UserFindInputDto): Promise<UserFindDto[]> {
+    return await this.userRepository.findUsers(body);
+  }
   async signUp(body: UserRequestDto): Promise<UserCreateReturnDto> {
     const { email, first_name, last_name, password } = body;
     const isUserExists = await this.userRepository.findByEmail(email);

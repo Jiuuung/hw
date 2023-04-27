@@ -20,12 +20,24 @@ export class SpaceService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async makeSpace(name: string, user: any): Promise<SpaceCreateReturnDto> {
+  async makeSpace(
+    name: string,
+    user: any,
+    manager_role: string[],
+    user_role: string[],
+    my_role: string,
+  ): Promise<boolean> {
     const cur_user = await this.userRepository.findByEmail(user.email);
     if (!cur_user) {
       throw new UnauthorizedException('no user found');
     } else {
-      const space = await this.spaceRepository.createSpace(name, cur_user);
+      const space = await this.spaceRepository.createSpace(
+        name,
+        cur_user,
+        manager_role,
+        user_role,
+        my_role,
+      );
       return space;
     }
   }
@@ -80,6 +92,7 @@ export class SpaceService {
     rolename: string,
   ): Promise<UserReturnDto[]> {
     const space = await this.spaceRepository.findSpaceByName(spacename);
+    console.log(space);
     if (!space) {
       throw new UnauthorizedException('no space found');
     } else {

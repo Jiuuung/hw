@@ -39,8 +39,8 @@ export class SpaceRepository {
 
   async findSpaceByName(name: string): Promise<SpaceReturnDto | null> {
     const space = this.prisma.space.findFirst({
-      include: { users: true },
       where: { name: name, isDeleted: false },
+      select: { id: true, name: true, users: true },
     });
     return space;
   }
@@ -62,7 +62,10 @@ export class SpaceRepository {
   async createSpace(
     name: string,
     cur_user: UserReturnDto,
-  ): Promise<SpaceCreateReturnDto> {
+    manager_role: string[],
+    user_role: string[],
+    my_role: string,
+  ): Promise<boolean> {
     const isExist = await this.findSpaceByName(name);
     if (isExist) {
       throw new UnauthorizedException('space name alerady exists');
@@ -76,21 +79,43 @@ export class SpaceRepository {
           access_code_participation: code_participation,
         },
       });
-      const m_role = await this.prisma.role.create({
-        data: {
-          name: 'prof',
-          auth: Auth.ADMIN,
-          spacename: m_space.name,
-        },
+      manager_role.map(async (role) => {
+        if (role === my_role) {
+          const m_role_id = await this.prisma.role.create({
+            data: {
+              name: role,
+              auth: Auth.ADMIN,
+              spacename: m_space.name,
+            },
+            select: { id: true },
+          });
+          await this.prisma.usersInSpaces.create({
+            data: {
+              user: { connect: { id: cur_user.id } },
+              space: { connect: { id: m_space.id } },
+              role: { connect: { id: m_role_id.id } },
+            },
+          });
+        } else {
+          await this.prisma.role.create({
+            data: {
+              name: role,
+              auth: Auth.ADMIN,
+              spacename: m_space.name,
+            },
+          });
+        }
       });
-      const userinspace = await this.prisma.usersInSpaces.create({
-        data: {
-          user: { connect: { id: cur_user.id } },
-          space: { connect: { id: m_space.id } },
-          role: { connect: { id: m_role.id } },
-        },
+      user_role.map(async (role) => {
+        await this.prisma.role.create({
+          data: {
+            name: role,
+            auth: Auth.USER,
+            spacename: m_space.name,
+          },
+        });
       });
-      return userinspace;
+      return true;
     }
   }
   random_code(): string {
@@ -109,52 +134,50 @@ export class SpaceRepository {
     user: UserReturnDto,
   ): Promise<SpaceJoinReturnDto> {
     let role = true;
-    return await this.prisma.$transaction(async (tx) => {
-      let tar_space = await tx.space.findFirst({
+    let tar_space = await this.prisma.space.findFirst({
+      where: {
+        name: name,
+        access_code_manager: code,
+        isDeleted: false,
+      },
+      select: { id: true, name: true },
+    });
+    if (!tar_space) {
+      tar_space = await this.prisma.space.findFirstOrThrow({
         where: {
           name: name,
-          access_code_manager: code,
           isDeleted: false,
+          access_code_participation: code,
         },
         select: { id: true, name: true },
       });
-      if (!tar_space) {
-        tar_space = await tx.space.findFirstOrThrow({
-          where: {
-            name: name,
-            isDeleted: false,
-            access_code_participation: code,
-          },
-          select: { id: true, name: true },
-        });
-        role = false;
-      }
-      const m_role = await tx.role.upsert({
-        where: {
-          roleinspace: { name: rolename, spacename: tar_space.name },
-        },
-        update: {},
-        create: {
-          name: rolename,
-          auth: role ? Auth.ADMIN : Auth.USER,
-          spacename: tar_space.name,
+      role = false;
+    }
+    const m_role = await this.prisma.role.upsert({
+      where: {
+        roleinspace: { name: rolename, spacename: tar_space.name },
+      },
+      update: {},
+      create: {
+        name: rolename,
+        auth: role ? Auth.ADMIN : Auth.USER,
+        spacename: tar_space.name,
+      },
+    });
+    if (m_role.auth !== (role ? Auth.ADMIN : Auth.USER)) {
+      throw new UnauthorizedException(
+        'already exist role name with different auth',
+      );
+    } else {
+      const userinspace = await this.prisma.usersInSpaces.create({
+        data: {
+          user: { connect: { id: user.id } },
+          space: { connect: { id: tar_space.id } },
+          role: { connect: { id: m_role.id } },
         },
       });
-      if (m_role.auth !== (role ? Auth.ADMIN : Auth.USER)) {
-        throw new UnauthorizedException(
-          'already exist role name with different auth',
-        );
-      } else {
-        const userinspace = await tx.usersInSpaces.create({
-          data: {
-            user: { connect: { id: user.id } },
-            space: { connect: { id: tar_space.id } },
-            role: { connect: { id: m_role.id } },
-          },
-        });
-        return userinspace;
-      }
-    });
+      return userinspace;
+    }
   }
 
   async isUserInSpace(email: string, spacename: string): Promise<boolean> {
@@ -193,12 +216,24 @@ export class SpaceRepository {
     return isuserinspace;
   }
 
-  async allUsersWithRole(rolename: string, spacename: string): Promise<User[]> {
+  async allUsersWithRole(
+    rolename: string,
+    spacename: string,
+  ): Promise<UserReturnDto[]> {
     const users = await this.prisma.user.findMany({
       where: {
         spaces: {
           some: { role: { name: rolename, spacename: spacename } },
         },
+      },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        first_name: true,
+        last_name: true,
+        imgUrl: true,
+        refresh_token: true,
       },
     });
     return users;
@@ -213,6 +248,7 @@ export class SpaceRepository {
       where: { roleinspace: { name: rolename, spacename: spacename } },
       update: { auth: auth },
       create: { name: rolename, spacename, auth: auth },
+      select: { name: true, spacename: true, auth: true },
     });
   }
 

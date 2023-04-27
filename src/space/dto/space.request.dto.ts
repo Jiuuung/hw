@@ -1,11 +1,22 @@
 import { PickType } from '@nestjs/swagger';
 import { Auth } from '@prisma/client';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 export class MakeSpaceDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  spacename: string;
+
+  @IsArray()
+  @IsNotEmpty()
+  manager_role: string[];
+
+  @IsArray()
+  user_role: string[];
+
+  @IsString()
+  @IsNotEmpty()
+  my_role: string;
 }
 
 export class SpaceJoinBodyDto {
