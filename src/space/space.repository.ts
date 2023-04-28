@@ -301,4 +301,9 @@ export class SpaceRepository {
       return true;
     }
   }
+
+  async deleteSpace(spacename: string): Promise<boolean> {
+    await this.prisma.space.delete({ where: { name: spacename } });
+    return true;
+  }
 }

@@ -23,7 +23,7 @@ export class PostRepository {
         content: body.content,
         author: { connect: { email: email } },
         space: { connect: { name: spacename } },
-        isNotice: body.notice,
+        isNotice: body.isnotice,
       },
       select: { title: true, author: true, space: true, isNotice: true },
     });

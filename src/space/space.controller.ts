@@ -137,4 +137,10 @@ export class SpaceController {
       req.user.email,
     );
   }
+
+  @UseGuards(AuthorizationAdminGuard)
+  @Delete(':spacename')
+  async deleteSpace(@Param() param): Promise<boolean> {
+    return await this.spaceService.deleteSpace(param.spacename);
+  }
 }

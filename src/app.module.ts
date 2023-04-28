@@ -9,6 +9,7 @@ import { PostModule } from './post/post.module';
 import { ConfigModule } from '@nestjs/config';
 import config from 'config/config';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+import { dotEnvOptions } from 'dotenv-option';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
     SpaceModule,
     PostModule,
     ConfigModule.forRoot({
-      load: [config],
+      envFilePath: dotEnvOptions.path,
       isGlobal: true,
     }),
   ],
@@ -27,7 +28,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
-    if (process.env.NEST_ENV === 'development') {
+    if (process.env.NODE_ENV === 'dev') {
       consumer.apply(LoggerMiddleware).forRoutes('*');
     }
   }

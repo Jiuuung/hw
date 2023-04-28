@@ -145,4 +145,8 @@ export class SpaceService {
   ): Promise<boolean> {
     return await this.spaceRepository.deleteRole(spacename, rolename);
   }
+
+  async deleteSpace(spacename: string): Promise<boolean> {
+    return await this.spaceRepository.deleteSpace(spacename);
+  }
 }

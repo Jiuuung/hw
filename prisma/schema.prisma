@@ -5,6 +5,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "mysql"
+  url = env("DATABASE_URL")
+}
+
 model User {
   id    Int     @default(autoincrement()) @id
   email String @unique
@@ -38,17 +43,17 @@ model Role {
   auth Auth @default(USER)
   isDeleted Boolean @default(false)
   userinspace UsersInSpaces[]
-  spacerole Space @relation(fields: [spacename], references:[name])
+  spacerole Space @relation(fields: [spacename], references:[name], onDelete: Cascade)
   spacename String
   @@unique(fields: [name, spacename], name: "roleinspace")
 }
 
 model UsersInSpaces{
-  user User @relation(fields: [userId], references:[id])
+  user User @relation(fields: [userId], references:[id], onDelete: Cascade)
   userId Int
-  space Space @relation(fields: [spaceId], references:[id])
+  space Space @relation(fields: [spaceId], references:[id], onDelete: Cascade)
   spaceId Int
-  role Role @relation(fields: [roleId], references:[id])
+  role Role @relation(fields: [roleId], references:[id],onDelete: Cascade)
   roleId Int
   @@unique(fields: [userId, spaceId], name:"userspace")
   @@id([userId, spaceId,roleId])
@@ -58,9 +63,9 @@ model Post{
   id Int @default(autoincrement()) @id
   title String
   content String
-  author User @relation(fields: [authoremail], references:[email])
+  author User @relation(fields: [authoremail], references:[email], onDelete: Cascade)
   authoremail String
-  space Space @relation(fields: [spacename], references:[name])
+  space Space @relation(fields: [spacename], references:[name], onDelete: Cascade)
   spacename String
   isAnonymous Boolean @default(false)
   isNotice Boolean @default(false)

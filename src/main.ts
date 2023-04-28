@@ -11,6 +11,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
+  require('dotenv');
   app.use(
     ['/docs', '/docs-json'],
     expressBasicAuth({
@@ -27,8 +28,8 @@ async function bootstrap(): Promise<void> {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
-  const configService = app.get(ConfigService);
-  const port = configService.get<string>('server.port');
+  const port = process.env.PORT;
+  console.log(port);
   await app.listen(port);
 }
 bootstrap();

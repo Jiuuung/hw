@@ -17,5 +17,5 @@ export class AdminPostDto {
 
   @IsBoolean()
   @IsNotEmpty()
-  notice: boolean;
+  isnotice: boolean;
 }
