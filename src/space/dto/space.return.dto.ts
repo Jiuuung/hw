@@ -27,7 +27,7 @@ export class SpaceCodeManagerReturnDto {
   access_code_manager: string;
 }
 
-export class SpaceCreateReturnDto {
+export class SpaceJoinReturnDto {
   @IsNumber()
   @IsNotEmpty()
   userId: number;
@@ -41,9 +41,27 @@ export class SpaceCreateReturnDto {
   roleId: number;
 }
 
-export class SpaceJoinReturnDto extends SpaceCreateReturnDto {}
+export class SpaceCreateReturnDto {
+  @IsNotEmpty()
+  @IsString()
+  access_code_manager: string;
 
-export class SpaceAdminUserReturnDto extends PickType(SpaceCreateReturnDto, [
+  @IsNotEmpty()
+  @IsString()
+  access_code_participation: string;
+}
+
+export class SpacePassIdDto {
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  spaceId: number;
+}
+
+export class SpaceAdminUserReturnDto extends PickType(SpaceJoinReturnDto, [
   'spaceId',
   'roleId',
 ] as const) {}

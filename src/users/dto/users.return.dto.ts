@@ -27,6 +27,20 @@ export class UserReturnDtoWithPasswordDto {
   imgUrl: string | null;
 }
 
+export class UserAuthorDto {
+  @IsEmail()
+  @IsString()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  first_name: string;
+
+  @IsString()
+  last_name: string;
+
+  imgUrl: string | null;
+}
 export class UserReturnDto extends OmitType(UserReturnDtoWithPasswordDto, [
   'password',
 ] as const) {}

@@ -26,7 +26,7 @@ export class SpaceService {
     manager_role: string[],
     user_role: string[],
     my_role: string,
-  ): Promise<boolean> {
+  ): Promise<SpaceCreateReturnDto> {
     const cur_user = await this.userRepository.findByEmail(user.email);
     if (!cur_user) {
       throw new UnauthorizedException('no user found');

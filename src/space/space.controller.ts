@@ -30,8 +30,8 @@ import {
   SpaceJoinReturnDto,
 } from './dto/space.return.dto';
 import { UserReturnDto } from 'src/users/dto/users.return.dto';
-import { AuthorizationUserGuard } from 'src/auth/jwt/authorizationuser.gurard';
-import { AuthorizationAdminGuard } from 'src/auth/jwt/authorizationadmin.gurard';
+import { AuthorizationUserGuard } from 'src/auth/jwt/authorizationuser.guard';
+import { AuthorizationAdminGuard } from 'src/auth/jwt/authorizationadmin.guard';
 
 @Controller('space')
 export class SpaceController {
@@ -45,7 +45,7 @@ export class SpaceController {
   async makeSpace(
     @Body() body: MakeSpaceDto,
     @Req() req: Request,
-  ): Promise<boolean> {
+  ): Promise<SpaceCreateReturnDto> {
     if (body.manager_role.includes(body.my_role)) {
       return this.spaceService.makeSpace(
         body.spacename,

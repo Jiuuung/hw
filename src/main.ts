@@ -9,7 +9,9 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({ validateCustomDecorators: true, transform: true }),
+  );
   app.useGlobalFilters(new HttpExceptionFilter());
   require('dotenv');
   app.use(

@@ -2,10 +2,13 @@ import { AdminPostDto } from './dto/post.admin.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { User, UsersInSpaces, Role, Auth } from '@prisma/client';
-import { UserPostDto } from './dto/post.user.dto';
+import { PostDto } from './dto/post.user.dto';
 import {
   MakePostAdminReturnDto,
   MakePostUserReturnDto,
+  PostAllReturnDto,
+  PostAnonymousReturnDto,
+  PostListReturn,
 } from './dto/post.return.dto';
 
 @Injectable()
@@ -14,7 +17,7 @@ export class PostRepository {
 
   async makeAdminPost(
     spacename: string,
-    body: AdminPostDto,
+    body: PostDto,
     email: string,
   ): Promise<MakePostAdminReturnDto> {
     return await this.prismaService.post.create({
@@ -25,13 +28,25 @@ export class PostRepository {
         space: { connect: { name: spacename } },
         isNotice: body.isnotice,
       },
-      select: { title: true, author: true, space: true, isNotice: true },
+      select: {
+        title: true,
+        author: {
+          select: {
+            email: true,
+            first_name: true,
+            last_name: true,
+            imgUrl: true,
+          },
+        },
+        space: { select: { name: true } },
+        isNotice: true,
+      },
     });
   }
 
   async makeUserPost(
     spacename: string,
-    body: UserPostDto,
+    body: PostDto,
     email: string,
   ): Promise<MakePostUserReturnDto> {
     const user = await this.prismaService.user.findFirstOrThrow({
@@ -45,32 +60,151 @@ export class PostRepository {
         space: { connect: { name: spacename } },
         isAnonymous: body.anonymous,
       },
-      select: { title: true, author: true, space: true, isAnonymous: true },
+      select: {
+        title: true,
+        author: {
+          select: {
+            email: true,
+            first_name: true,
+            last_name: true,
+            imgUrl: true,
+          },
+        },
+        space: { select: { name: true } },
+        isAnonymous: true,
+      },
     });
     return post;
   }
 
-  /*async findPostById(
+  async findPostById(
     postid: number,
     userId: number,
     email: string,
-    spaceId: number,
-  ) {
-    const userinspace = await this.prismaService.usersInSpaces.findFirstOrThrow(
-      {
-        where: {
-          userId: userId,
-          spaceId: spaceId,
-        },
-        include: { user: true, role: true },
-      },
-    );
+    auth: Auth,
+  ): Promise<PostAnonymousReturnDto | PostAllReturnDto | null> {
     const post = await this.prismaService.post.findUnique({
       where: { id: postid },
+      select: {
+        title: true,
+        content: true,
+        author: {
+          select: {
+            email: true,
+            first_name: true,
+            last_name: true,
+            imgUrl: true,
+          },
+        },
+        fileurl: true,
+        isAnonymous: true,
+        isNotice: true,
+      },
     });
-    if (userinspace.role.auth === Auth.ADMIN || post.authoremail === email) {
-      return null;
+    if (
+      auth === Auth.ADMIN ||
+      post.author.email === email ||
+      post.isAnonymous === true
+    ) {
+      return post;
     }
-    return null;
-  }*/
+    const { author, ...anonypost } = post;
+    return anonypost;
+  }
+  async isPostAuthor(postid: number, email: string): Promise<boolean> {
+    const isAuthor = await this.prismaService.post.findFirst({
+      where: { id: postid, authoremail: email },
+      select: { authoremail: true },
+    });
+    if (isAuthor) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  async listPostAdmin(
+    spacename: string,
+    userId: number,
+    email: string,
+    auth: Auth,
+  ): Promise<PostListReturn[]> {
+    const postList = await this.prismaService.post.findMany({
+      where: {
+        spacename: spacename,
+        isDeleted: false,
+      },
+      select: {
+        title: true,
+        author: {
+          select: {
+            email: true,
+            first_name: true,
+            last_name: true,
+            imgUrl: true,
+          },
+        },
+        isAnonymous: true,
+        isNotice: true,
+      },
+    });
+    return postList;
+  }
+  async listPostUser(
+    spacename: string,
+    userId: number,
+    email: string,
+    auth: Auth,
+  ): Promise<PostListReturn[]> {
+    const postListNotAnon = await this.prismaService.post.findMany({
+      where: {
+        spacename: spacename,
+        isDeleted: false,
+        OR: [{ isAnonymous: false }, { authoremail: email }],
+      },
+      select: {
+        title: true,
+        author: {
+          select: {
+            email: true,
+            first_name: true,
+            last_name: true,
+            imgUrl: true,
+          },
+        },
+        isAnonymous: true,
+        isNotice: true,
+      },
+    });
+    const postListAnon = await this.prismaService.post.findMany({
+      where: {
+        spacename: spacename,
+        isDeleted: false,
+        isAnonymous: true,
+        NOT: { authoremail: email },
+      },
+      select: {
+        title: true,
+        author: {
+          select: {
+            email: true,
+            first_name: true,
+            last_name: true,
+            imgUrl: true,
+          },
+        },
+        isAnonymous: true,
+        isNotice: true,
+      },
+    });
+    const postList = { ...postListNotAnon, ...postListAnon };
+    return postList;
+  }
+
+  async deletePost(id: number): Promise<boolean> {
+    await this.prismaService.post.delete({
+      where: { id: id },
+    });
+    return true;
+  }
 }

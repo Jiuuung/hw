@@ -10,6 +10,7 @@ import {
   SpaceCodeManagerReturnDto,
   SpaceCreateReturnDto,
   SpaceJoinReturnDto,
+  SpacePassIdDto,
   SpaceReturnDto,
 } from './dto/space.return.dto';
 import { UserReturnDto } from 'src/users/dto/users.return.dto';
@@ -65,13 +66,13 @@ export class SpaceRepository {
     manager_role: string[],
     user_role: string[],
     my_role: string,
-  ): Promise<boolean> {
+  ): Promise<SpaceCreateReturnDto> {
     const isExist = await this.findSpaceByName(name);
     if (isExist) {
       throw new UnauthorizedException('space name alerady exists');
     } else {
-      const code_manager = this.random_code();
-      const code_participation = this.random_code();
+      const code_manager: string = this.random_code();
+      const code_participation: string = this.random_code();
       const m_space = await this.prisma.space.create({
         data: {
           name: name,
@@ -115,7 +116,10 @@ export class SpaceRepository {
           },
         });
       });
-      return true;
+      return {
+        access_code_manager: code_manager,
+        access_code_participation: code_participation,
+      };
     }
   }
   random_code(): string {
@@ -196,6 +200,22 @@ export class SpaceRepository {
     } else {
       return false;
     }
+  }
+  async isUserInSpacePassId(
+    email: string,
+    spacename: string,
+  ): Promise<SpacePassIdDto | null> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { email: email },
+    });
+    const space = await this.prisma.space.findFirstOrThrow({
+      where: { name: spacename, isDeleted: false },
+      select: { id: true },
+    });
+    return await this.prisma.usersInSpaces.findFirst({
+      where: { userId: user.id, spaceId: space.id },
+      select: { userId: true, spaceId: true },
+    });
   }
 
   async GetAdminUserInSpace(
