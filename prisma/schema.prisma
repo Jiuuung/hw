@@ -18,8 +18,10 @@ model User {
   last_name String
   imgUrl String?
   refresh_token String?
+  anonymous Boolean @default(true)
   spaces UsersInSpaces[]
   post Post[]
+  chat Chat[]
 }
 
 model Space{
@@ -31,6 +33,7 @@ model Space{
   users UsersInSpaces[]
   role Role[]
   post Post[]
+  chat Chat[]
 }
 
 enum Auth{
@@ -71,4 +74,27 @@ model Post{
   isNotice Boolean @default(false)
   isDeleted Boolean @default(false)
   fileurl String?
+  chat Chat[]
+}
+model Chat{
+  id Int @default(autoincrement()) @id
+  content String
+  author User @relation(fields: [authoremail], references:[email], onDelete: Cascade)
+  authoremail String
+  space Space @relation(fields: [spacename], references:[name], onDelete: Cascade)
+  spacename String
+  post Post @relation(fields: [postId], references:[id], onDelete: Cascade)
+  postId Int
+  isAnonymous Boolean @default(false)
+  isDeleted Boolean @default(false)
+  chat Chat[] @relation("chat")
+  parent Chat? @relation("chat", fields: [parentId], references: [id])
+  parentId Int? @map("chatid")
+  rootChat Chat[] @relation("root")
+  root Chat? @relation("root", fields: [rootId], references: [id])
+  rootId Int? @map("rootchatid")
+  level Int @default(0)
+  order Int @default(0)
+  answerNum Int @default(0)
+  @@unique(fields: [id, isDeleted], name:"validchat")
 }

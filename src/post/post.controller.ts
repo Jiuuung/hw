@@ -1,11 +1,12 @@
 import { PostService } from './post.service';
-import { AdminPostDto } from './dto/post.admin.dto';
+import { AdminPostDto, PostEditDto } from './dto/post.admin.dto';
 import {
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseFilters,
@@ -25,10 +26,13 @@ import {
 } from './dto/post.return.dto';
 import { AuthorizationUserGuard } from 'src/auth/jwt/authorizationuser.guard';
 import { UserRoleGuard } from 'src/auth/jwt/authorole.guard';
-import { UserAdminDisting, UserRequest } from './post.decorator';
+import {
+  UserAdminDisting,
+  UserRequest,
+} from '../common/decorator/common.decorator';
 import { PostDto } from './dto/post.user.dto';
 import { Auth } from '@prisma/client';
-import { RequestUserDto } from 'src/common/DTO/common.dto';
+import { RequestUserDto } from 'src/common/dto/common.dto';
 import { PostDeleteGuard } from 'src/auth/jwt/postdelete.guard';
 
 @Controller('post')
@@ -88,7 +92,14 @@ export class PostController {
       body.auth,
     );
   }
-
+  @UseGuards(PostDeleteGuard)
+  @Patch('/:spacename/:postid')
+  async editPost(
+    @Param() param,
+    @Body() body: PostEditDto,
+  ): Promise<PostAllReturnDto> {
+    return await this.postService.editPost(body, param.postid);
+  }
   @UseGuards(PostDeleteGuard)
   @Delete('/:spacename/:postid')
   async deletePost(@Param() param): Promise<boolean> {

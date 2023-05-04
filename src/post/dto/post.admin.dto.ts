@@ -19,3 +19,17 @@ export class AdminPostDto {
   @IsNotEmpty()
   isnotice: boolean;
 }
+
+export class PostEditDto {
+  @IsString()
+  title: string;
+
+  @IsString()
+  content: string;
+
+  @IsBoolean()
+  isAnonymous: boolean;
+
+  @IsBoolean()
+  isNotice: boolean;
+}

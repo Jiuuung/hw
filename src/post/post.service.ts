@@ -11,6 +11,7 @@ import {
   PostAnonymousReturnDto,
   PostListReturn,
 } from './dto/post.return.dto';
+import { PostEditDto } from './dto/post.admin.dto';
 
 @Injectable()
 export class PostService {
@@ -63,7 +64,16 @@ export class PostService {
       auth,
     );
   }
-
+  async editPost(body: PostEditDto, id: number): Promise<PostAllReturnDto> {
+    const post = await this.postRepository.editPost(
+      body.title,
+      body.content,
+      body.isAnonymous,
+      body.isNotice,
+      id,
+    );
+    return post;
+  }
   async deletePost(id: number): Promise<boolean> {
     await this.postRepository.deletePost(id);
     return true;

@@ -18,6 +18,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
     PrismaService,
   ],
   controllers: [PostController],
-  exports: [PostService],
+  exports: [PostService, PostRepository],
 })
 export class PostModule {}

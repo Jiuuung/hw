@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `MaxChat` MODIFY `maxlevel` INTEGER NOT NULL DEFAULT 0;

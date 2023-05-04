@@ -10,10 +10,12 @@ import { ConfigModule } from '@nestjs/config';
 import config from 'config/config';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { dotEnvOptions } from 'dotenv-option';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
     AuthModule,
+    ChatModule,
     UsersModule,
     PrismaModule,
     SpaceModule,
@@ -22,6 +24,7 @@ import { dotEnvOptions } from 'dotenv-option';
       envFilePath: dotEnvOptions.path,
       isGlobal: true,
     }),
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -83,8 +83,8 @@ export class PostRepository {
     email: string,
     auth: Auth,
   ): Promise<PostAnonymousReturnDto | PostAllReturnDto | null> {
-    const post = await this.prismaService.post.findUnique({
-      where: { id: postid },
+    const post = await this.prismaService.post.findFirst({
+      where: { id: postid, isDeleted: false },
       select: {
         title: true,
         content: true,
@@ -111,9 +111,19 @@ export class PostRepository {
     const { author, ...anonypost } = post;
     return anonypost;
   }
+  async isPostExist(postid: number, spacename: string): Promise<boolean> {
+    const post = await this.prismaService.post.findFirst({
+      where: { id: postid, spacename: spacename, isDeleted: false },
+      select: { id: true },
+    });
+    if (post) {
+      return true;
+    }
+    return false;
+  }
   async isPostAuthor(postid: number, email: string): Promise<boolean> {
     const isAuthor = await this.prismaService.post.findFirst({
-      where: { id: postid, authoremail: email },
+      where: { id: postid, authoremail: email, isDeleted: false },
       select: { authoremail: true },
     });
     if (isAuthor) {
@@ -187,10 +197,7 @@ export class PostRepository {
         title: true,
         author: {
           select: {
-            email: true,
-            first_name: true,
-            last_name: true,
-            imgUrl: true,
+            anonymous: true,
           },
         },
         isAnonymous: true,
@@ -201,9 +208,43 @@ export class PostRepository {
     return postList;
   }
 
-  async deletePost(id: number): Promise<boolean> {
-    await this.prismaService.post.delete({
+  async editPost(
+    title: string,
+    content: string,
+    isAnonymous: boolean,
+    isNotice: boolean,
+    id: number,
+  ): Promise<PostAllReturnDto> {
+    const post = await this.prismaService.post.update({
       where: { id: id },
+      data: {
+        title: title,
+        content: content,
+        isAnonymous: isAnonymous,
+        isNotice: isNotice,
+      },
+      select: {
+        title: true,
+        content: true,
+        author: {
+          select: {
+            email: true,
+            first_name: true,
+            last_name: true,
+            imgUrl: true,
+          },
+        },
+        fileurl: true,
+        isAnonymous: true,
+        isNotice: true,
+      },
+    });
+    return post;
+  }
+  async deletePost(id: number): Promise<boolean> {
+    await this.prismaService.post.update({
+      where: { id: id },
+      data: { isDeleted: true },
     });
     return true;
   }

@@ -1,5 +1,11 @@
 import { Space, User } from '@prisma/client';
-import { IsBoolean, IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  ValidateIf,
+} from 'class-validator';
 import { UserAuthorDto } from 'src/users/dto/users.return.dto';
 
 export class MakePostReturnDto {
@@ -59,13 +65,16 @@ export class PostAllReturnDto {
   @IsBoolean()
   isAnonymous: boolean;
 }
-
+export class Empty {
+  @IsBoolean()
+  anonymous: boolean;
+}
 export class PostListReturn {
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  author: UserAuthorDto;
+  author: UserAuthorDto | Empty;
 
   @IsBoolean()
   isNotice: boolean;
