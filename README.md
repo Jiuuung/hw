@@ -71,3 +71,12 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+## Folder
+
+- ### common
+  - #### decorator
+    모든 decorator는 여기에 위치함
+  - #### dto
+    공통으로 사용하는 dto는 여기에 위치함.
+    1. request를 보낸 user의 이메일을 담는 dto
