@@ -6,6 +6,7 @@ import { HttpExceptionFilter } from './common/exception/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -23,6 +24,7 @@ async function bootstrap(): Promise<void> {
       },
     }),
   );
+  app.use(cookieParser());
   const config = new DocumentBuilder()
     .setTitle('N.T.H')
     .setDescription('Nest Tutorial Homeword')

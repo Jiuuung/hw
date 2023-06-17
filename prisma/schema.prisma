@@ -3,7 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  //provider = "prisma-erd-generator"
+  //theme = "dark"
+  //mmdcPath = "node_modules/.bin"
 }
+
 
 datasource db {
   provider = "mysql"

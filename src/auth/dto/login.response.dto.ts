@@ -1,4 +1,9 @@
 interface Tokens {
-  access_token: string;
-  refresh_token: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
+interface AuthUserInfo {
+  id: number;
+  email: string;
 }
