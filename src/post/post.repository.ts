@@ -209,6 +209,7 @@ export class PostRepository {
     isNotice: boolean,
     id: number,
   ): Promise<PostReturnDTO> {
+    console.log(id);
     const post = await this.prismaService.post.update({
       where: { id: id },
       data: {

@@ -53,8 +53,8 @@ export class PostService {
     const post = await this.postRepository.editPost(
       body.title,
       body.content,
-      role === Auth.ADMIN ? body.isAnonymous : false,
-      body.isNotice,
+      role === Auth.ADMIN ? false : body.isAnonymous,
+      role === Auth.ADMIN ? body.isNotice : false,
       id,
     );
     return post;

@@ -22,7 +22,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const user: AuthReturnUserInfoDTO =
       await this.userRepository.findUserWithoutPassword(payload.sub);
     if (user) {
-      console.log(user);
       return user;
     } else {
       throw new UnauthorizedException('JWT no user error');

@@ -93,11 +93,11 @@ export class PostController {
   @Patch('/:spacename/:postid')
   async editPost(
     @AuthRequest() auth: Auth,
-    @Param()
-    param,
+    @Param('postid', ParseIntPipe)
+    id,
     @Body() body: PostRequestAdminEditDTO,
   ): Promise<PostReturnDTO> {
-    return await this.postService.editPost(auth, body, param.postid);
+    return await this.postService.editPost(auth, body, id);
   }
 
   @UseGuards(PostDeleteGuard)
