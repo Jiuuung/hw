@@ -1,17 +1,14 @@
-import { UserReturnDto } from './../users/dto/users.return.dto';
-import { UserRequestDto } from './../users/dto/users.request.dto';
+import { UserReturnDTO } from './../users/dto/users.return.dto';
 import { UserRepository } from 'src/users/users.repository';
 import { SpaceRepository } from './space.repository';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { MakeSpaceDto } from './dto/space.request.dto';
 import { User, Auth } from '@prisma/client';
-import { ChangeRoleDto } from './dto/space.changerole.dto';
 import {
-  MkOrChangeRoleReturnDto,
-  SpaceCodeManagerReturnDto,
-  SpaceCreateReturnDto,
-  SpaceJoinReturnDto,
+  SpaceReturnCreateDTO,
+  SpaceReturnJoinDTO,
+  SpaceReturnMkOrChangeRoleDTO,
 } from './dto/space.return.dto';
+import { SpaceRequestChangeRoleDTO } from './dto/space.request.dto';
 
 @Injectable()
 export class SpaceService {
@@ -26,7 +23,7 @@ export class SpaceService {
     manager_role: string[],
     user_role: string[],
     my_role: string,
-  ): Promise<SpaceCreateReturnDto> {
+  ): Promise<SpaceReturnCreateDTO> {
     const cur_user = await this.userRepository.findByEmail(user.email);
     if (!cur_user) {
       throw new UnauthorizedException('no user found');
@@ -42,10 +39,7 @@ export class SpaceService {
     }
   }
 
-  async checkCodeManager(
-    name: string,
-    user: any,
-  ): Promise<SpaceCodeManagerReturnDto> {
+  async checkCodeManager(name: string, user: any): Promise<string> {
     const cur_user = await this.userRepository.findByEmail(user.email);
     if (!cur_user) {
       throw new UnauthorizedException('no user found');
@@ -64,7 +58,7 @@ export class SpaceService {
     code: string,
     rolename: string,
     user: User,
-  ): Promise<SpaceJoinReturnDto> {
+  ): Promise<SpaceReturnJoinDTO> {
     const cur_user = await this.userRepository.findByEmail(user.email);
     if (!cur_user) {
       throw new UnauthorizedException('no user found');
@@ -87,24 +81,29 @@ export class SpaceService {
   }
 
   async userRoleInSpace(
-    user: UserRequestDto,
     spacename: string,
     rolename: string,
-  ): Promise<UserReturnDto[]> {
+  ): Promise<UserReturnDTO[]> {
     const space = await this.spaceRepository.findSpaceByName(spacename);
     console.log(space);
     if (!space) {
       throw new UnauthorizedException('no space found');
     } else {
-      return await this.spaceRepository.allUsersWithRole(rolename, spacename);
+      const userroleinspace = (
+        await this.spaceRepository.allUsersWithRole(rolename, spacename)
+      ).map((user) => {
+        user.refresh_token = '';
+        return user;
+      });
+      return userroleinspace;
     }
   }
 
   async changeRoleInSpace(
-    userlist: ChangeRoleDto[],
+    userlist: SpaceRequestChangeRoleDTO[],
     email: string,
     spacename: string,
-  ): Promise<boolean> {
+  ): Promise<boolean[]> {
     const isUserInSpace = await this.spaceRepository.GetAdminUserInSpace(
       email,
       spacename,
@@ -121,8 +120,7 @@ export class SpaceService {
     rolename: string,
     auth: string,
     spacename: string,
-    email: string,
-  ): Promise<MkOrChangeRoleReturnDto> {
+  ): Promise<SpaceReturnMkOrChangeRoleDTO> {
     let newauth: Auth;
     if (auth === 'admin') {
       newauth = Auth.ADMIN;
@@ -138,11 +136,7 @@ export class SpaceService {
     );
   }
 
-  async deleteRole(
-    spacename: string,
-    rolename: string,
-    email: string,
-  ): Promise<boolean> {
+  async deleteRole(spacename: string, rolename: string): Promise<boolean> {
     return await this.spaceRepository.deleteRole(spacename, rolename);
   }
 

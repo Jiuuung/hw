@@ -1,17 +1,16 @@
-import { IsEmail } from 'class-validator';
 import { UserRepository } from 'src/users/users.repository';
 import { Injectable } from '@nestjs/common';
 import { SpaceRepository } from 'src/space/space.repository';
 import { PostRepository } from './post.repository';
-import { Post, Auth } from '@prisma/client';
+import { Auth } from '@prisma/client';
 import {
-  MakePostAdminReturnDto,
-  MakePostUserReturnDto,
-  PostAllReturnDto,
-  PostAnonymousReturnDto,
-  PostListReturn,
+  PostReturnAdminMakeDTO,
+  PostReturnUserMakeDTO,
+  PostReturnDTO,
+  PostReturnAnonymousDTO,
+  PostReturnListDTO,
 } from './dto/post.return.dto';
-import { PostEditDto } from './dto/post.admin.dto';
+import { PostRequestAdminEditDTO } from './dto/post.request.dto';
 
 @Injectable()
 export class PostService {
@@ -20,26 +19,19 @@ export class PostService {
     private readonly userRepository: UserRepository,
     private readonly spaceRepository: SpaceRepository,
   ) {}
-  async makeAdminPost(spacename, body, user): Promise<MakePostAdminReturnDto> {
+  async makeAdminPost(spacename, body, user): Promise<PostReturnAdminMakeDTO> {
     return await this.postRepository.makeAdminPost(spacename, body, user.email);
   }
-  async makeUserPost(spacename, body, user): Promise<MakePostUserReturnDto> {
+  async makeUserPost(spacename, body, user): Promise<PostReturnUserMakeDTO> {
     return await this.postRepository.makeUserPost(spacename, body, user.email);
   }
 
   async seePost(
-    spacename: string,
     postid: number,
     email: string,
     auth: Auth,
-  ): Promise<PostAnonymousReturnDto | PostAllReturnDto | null> {
-    const userId = await this.spaceRepository.getUserId(email);
-    const post = await this.postRepository.findPostById(
-      postid,
-      userId.id,
-      email,
-      auth,
-    );
+  ): Promise<PostReturnAnonymousDTO | PostReturnDTO | null> {
+    const post = await this.postRepository.findPostById(postid, email, auth);
     return post;
   }
 
@@ -47,28 +39,21 @@ export class PostService {
     spacename: string,
     auth: Auth,
     email: string,
-  ): Promise<PostListReturn[]> {
-    const userId = await this.spaceRepository.getUserId(email);
+  ): Promise<PostReturnListDTO[]> {
     if (auth === Auth.ADMIN) {
-      return await this.postRepository.listPostAdmin(
-        spacename,
-        userId.id,
-        email,
-        auth,
-      );
+      return await this.postRepository.listPostAdmin(spacename);
     }
-    return await this.postRepository.listPostUser(
-      spacename,
-      userId.id,
-      email,
-      auth,
-    );
+    return await this.postRepository.listPostUser(spacename, email);
   }
-  async editPost(body: PostEditDto, id: number): Promise<PostAllReturnDto> {
+  async editPost(
+    role: Auth,
+    body: PostRequestAdminEditDTO,
+    id: number,
+  ): Promise<PostReturnDTO> {
     const post = await this.postRepository.editPost(
       body.title,
       body.content,
-      body.isAnonymous,
+      role === Auth.ADMIN ? body.isAnonymous : false,
       body.isNotice,
       id,
     );

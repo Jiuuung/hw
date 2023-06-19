@@ -1,14 +1,9 @@
+import { AuthReturnUserInfoDTO } from './../dto/login.return.dto';
 import { UserRepository } from '../../users/users.repository';
 import { jwtConstants } from './../constants';
-import {
-  Injectable,
-  ValidationPipe,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtService } from '@nestjs/jwt';
-import { UserReturnDto } from 'src/users/dto/users.return.dto';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -23,10 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload?: {
     email: string;
     sub: number;
-  }): Promise<AuthUserInfo> {
-    const user: AuthUserInfo =
+  }): Promise<AuthReturnUserInfoDTO> {
+    const user: AuthReturnUserInfoDTO =
       await this.userRepository.findUserWithoutPassword(payload.sub);
     if (user) {
+      console.log(user);
       return user;
     } else {
       throw new UnauthorizedException('JWT no user error');

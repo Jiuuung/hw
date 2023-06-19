@@ -1,14 +1,16 @@
-import { AdminPostDto } from './dto/post.admin.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { User, UsersInSpaces, Role, Auth } from '@prisma/client';
-import { PostDto } from './dto/post.user.dto';
+import { Auth } from '@prisma/client';
 import {
-  MakePostAdminReturnDto,
-  MakePostUserReturnDto,
-  PostAllReturnDto,
-  PostAnonymousReturnDto,
-  PostListReturn,
+  PostRequestAdminDTO,
+  PostRequestUserDTO,
+} from './dto/post.request.dto';
+import {
+  PostReturnAdminMakeDTO,
+  PostReturnUserMakeDTO,
+  PostReturnDTO,
+  PostReturnAnonymousDTO,
+  PostReturnListDTO,
 } from './dto/post.return.dto';
 
 @Injectable()
@@ -17,9 +19,9 @@ export class PostRepository {
 
   async makeAdminPost(
     spacename: string,
-    body: PostDto,
+    body: PostRequestAdminDTO,
     email: string,
-  ): Promise<MakePostAdminReturnDto> {
+  ): Promise<PostReturnAdminMakeDTO> {
     return await this.prismaService.post.create({
       data: {
         title: body.title,
@@ -46,9 +48,9 @@ export class PostRepository {
 
   async makeUserPost(
     spacename: string,
-    body: PostDto,
+    body: PostRequestUserDTO,
     email: string,
-  ): Promise<MakePostUserReturnDto> {
+  ): Promise<PostReturnUserMakeDTO> {
     const user = await this.prismaService.user.findFirstOrThrow({
       where: { email: email },
     });
@@ -79,10 +81,9 @@ export class PostRepository {
 
   async findPostById(
     postid: number,
-    userId: number,
     email: string,
     auth: Auth,
-  ): Promise<PostAnonymousReturnDto | PostAllReturnDto | null> {
+  ): Promise<PostReturnAnonymousDTO | PostReturnDTO | null> {
     const post = await this.prismaService.post.findFirst({
       where: { id: postid, isDeleted: false },
       select: {
@@ -133,12 +134,7 @@ export class PostRepository {
     }
   }
 
-  async listPostAdmin(
-    spacename: string,
-    userId: number,
-    email: string,
-    auth: Auth,
-  ): Promise<PostListReturn[]> {
+  async listPostAdmin(spacename: string): Promise<PostReturnListDTO[]> {
     const postList = await this.prismaService.post.findMany({
       where: {
         spacename: spacename,
@@ -162,10 +158,8 @@ export class PostRepository {
   }
   async listPostUser(
     spacename: string,
-    userId: number,
     email: string,
-    auth: Auth,
-  ): Promise<PostListReturn[]> {
+  ): Promise<PostReturnListDTO[]> {
     const postListNotAnon = await this.prismaService.post.findMany({
       where: {
         spacename: spacename,
@@ -204,7 +198,7 @@ export class PostRepository {
         isNotice: true,
       },
     });
-    const postList = { ...postListNotAnon, ...postListAnon };
+    const postList = [...postListNotAnon, ...postListAnon];
     return postList;
   }
 
@@ -214,7 +208,7 @@ export class PostRepository {
     isAnonymous: boolean,
     isNotice: boolean,
     id: number,
-  ): Promise<PostAllReturnDto> {
+  ): Promise<PostReturnDTO> {
     const post = await this.prismaService.post.update({
       where: { id: id },
       data: {

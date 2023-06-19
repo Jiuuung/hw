@@ -6,7 +6,7 @@ import { PrismaClient } from '@prisma/client';
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     super();
-    this.$use(async (params, next) => {
+    /*this.$use(async (params, next) => {
       const modelList = ['Space', 'Role', 'Post', 'Chat'];
       if (modelList.includes(params.model)) {
         if (params.action === 'findUnique' || params.action === 'findFirst') {
@@ -22,7 +22,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         }
       }
       return next(params);
-    });
+    });*/
   }
   async onModuleInit(): Promise<void> {
     await this.$connect();

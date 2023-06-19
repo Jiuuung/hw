@@ -1,14 +1,8 @@
 import { PickType } from '@nestjs/swagger';
-import { Auth, User, UsersInSpaces } from '@prisma/client';
+import { Auth, UsersInSpaces } from '@prisma/client';
 import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class IdReturnDto {
-  @IsNumber()
-  @IsNotEmpty()
-  id: number;
-}
-
-export class SpaceReturnDto {
+export class SpaceReturnDTO {
   @IsNumber()
   @IsNotEmpty()
   id: number;
@@ -21,13 +15,7 @@ export class SpaceReturnDto {
   users: UsersInSpaces[];
 }
 
-export class SpaceCodeManagerReturnDto {
-  @IsNotEmpty()
-  @IsString()
-  access_code_manager: string;
-}
-
-export class SpaceJoinReturnDto {
+export class SpaceReturnJoinDTO {
   @IsNumber()
   @IsNotEmpty()
   userId: number;
@@ -41,7 +29,7 @@ export class SpaceJoinReturnDto {
   roleId: number;
 }
 
-export class SpaceCreateReturnDto {
+export class SpaceReturnCreateDTO {
   @IsNotEmpty()
   @IsString()
   access_code_manager: string;
@@ -51,7 +39,7 @@ export class SpaceCreateReturnDto {
   access_code_participation: string;
 }
 
-export class SpacePassIdDto {
+export class SpaceReturnIdDTO {
   @IsNotEmpty()
   @IsNumber()
   userId: number;
@@ -61,12 +49,12 @@ export class SpacePassIdDto {
   spaceId: number;
 }
 
-export class SpaceAdminUserReturnDto extends PickType(SpaceJoinReturnDto, [
+export class SpaceReturnAdminDTO extends PickType(SpaceReturnJoinDTO, [
   'spaceId',
   'roleId',
 ] as const) {}
 
-export class MkOrChangeRoleReturnDto {
+export class SpaceReturnMkOrChangeRoleDTO {
   @IsString()
   @IsNotEmpty()
   name: string;

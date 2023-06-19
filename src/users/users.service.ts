@@ -1,23 +1,25 @@
 import { UserRepository } from './users.repository';
-import { UserFindInputDto, UserRequestDto } from './dto/users.request.dto';
+import {
+  UserRequestSignupDTO,
+  UserRequestNameDTO,
+} from './dto/users.request.dto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import {
-  UserCreateReturnDto,
-  UserDeleteInputDto,
-  UserDeleteReturnDto,
-  UserFindDto,
+  UserReturnCreateDTO,
+  UserReturnDeleteDTO,
+  UserReturnFindDTO,
 } from './dto/users.return.dto';
+import { AuthRequestUserDTO } from 'src/auth/dto/login.request.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private userRepository: UserRepository) {}
 
-  async findUsers(body: UserFindInputDto): Promise<UserFindDto[]> {
+  async findUsers(body: UserRequestNameDTO): Promise<UserReturnFindDTO[]> {
     return await this.userRepository.findUsers(body);
   }
-  async signUp(body: UserRequestDto): Promise<UserCreateReturnDto> {
+  async signUp(body: UserRequestSignupDTO): Promise<UserReturnCreateDTO> {
     const { email, first_name, last_name, password } = body;
     const isUserExists = await this.userRepository.findByEmail(email);
     if (isUserExists) {
@@ -34,8 +36,8 @@ export class UsersService {
     return user;
   }
 
-  async delete(users: any): Promise<UserDeleteReturnDto> {
-    const user: UserDeleteInputDto = await this.userRepository.findByEmail(
+  async delete(users: AuthRequestUserDTO): Promise<UserReturnDeleteDTO> {
+    const user: AuthRequestUserDTO = await this.userRepository.findByEmail(
       users.email,
     );
     return await this.userRepository.delete(user);

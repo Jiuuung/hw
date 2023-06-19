@@ -1,15 +1,15 @@
-import { IsBoolean, IsNumber, IsString, ValidateIf } from 'class-validator';
-import { UserAuthorDto } from 'src/users/dto/users.return.dto';
+import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { UserReturnAuthorDTO } from 'src/users/dto/users.return.dto';
 
-export class Empty {
+export class ChatReturnEmptyDTO {
   @IsBoolean()
   anonymous: boolean;
 }
-export class ChatAllReturnDto {
+export class ChatReturnDTO {
   @IsString()
   content: string;
 
-  author: UserAuthorDto | Empty;
+  author: UserReturnAuthorDTO | ChatReturnEmptyDTO;
 
   @IsNumber()
   order: number;

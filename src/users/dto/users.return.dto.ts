@@ -1,7 +1,7 @@
 import { OmitType, PickType } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsEmail, IsNumber } from 'class-validator';
 
-export class UserReturnDtoWithPasswordDto {
+export class UserReturnWithPasswordDTO {
   @IsNumber()
   @IsNotEmpty()
   id: number;
@@ -27,7 +27,7 @@ export class UserReturnDtoWithPasswordDto {
   imgUrl: string | null;
 }
 
-export class UserAuthorDto {
+export class UserReturnAuthorDTO {
   @IsEmail()
   @IsString()
   @IsNotEmpty()
@@ -41,33 +41,23 @@ export class UserAuthorDto {
 
   imgUrl: string | null;
 }
-export class UserReturnDto extends OmitType(UserReturnDtoWithPasswordDto, [
+export class UserReturnDTO extends OmitType(UserReturnWithPasswordDTO, [
   'password',
 ] as const) {}
 
-export class UserFindDto extends OmitType(UserReturnDto, [
-  'email',
-  'id',
-  'refresh_token',
+export class UserReturnFindDTO extends PickType(UserReturnDTO, [
+  'first_name',
+  'last_name',
+  'imgUrl',
 ] as const) {}
-export class UserCreateReturnDto extends PickType(UserReturnDto, [
+export class UserReturnCreateDTO extends PickType(UserReturnDTO, [
   'email',
   'first_name',
   'last_name',
 ]) {}
 
-export class UserDeleteInputDto {
-  @IsNumber()
-  @IsNotEmpty()
-  id: number;
-}
-
-export class UserDeleteReturnDto extends PickType(UserReturnDto, [
+export class UserReturnDeleteDTO extends PickType(UserReturnDTO, [
   'email',
   'first_name',
   'last_name',
-]) {}
-
-export class UserRefreshTokenUpdateDto extends PickType(UserReturnDto, [
-  'refresh_token',
 ]) {}

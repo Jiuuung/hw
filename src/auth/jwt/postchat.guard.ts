@@ -1,4 +1,3 @@
-import { ChangeRoleDto } from './../../space/dto/space.changerole.dto';
 import { PostRepository } from './../../post/post.repository';
 import { SpaceRepository } from '../../space/space.repository';
 import {

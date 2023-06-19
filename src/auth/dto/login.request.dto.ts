@@ -1,9 +1,6 @@
-import { UserRequestDto } from './../../users/dto/users.request.dto';
-import { PickType } from '@nestjs/swagger';
-import { User } from '@prisma/client';
 import { IsEmail, IsNotEmpty, IsString, IsNumber } from 'class-validator';
 
-export class LoginRequestDto {
+export class AuthRequestUserLoginDTO {
   @IsEmail()
   @IsNotEmpty()
   email: string;
@@ -13,7 +10,7 @@ export class LoginRequestDto {
   password: string;
 }
 
-export class AuthUserInfoDTO {
+export class AuthRequestUserDTO {
   @IsNumber()
   @IsNotEmpty()
   id: number;

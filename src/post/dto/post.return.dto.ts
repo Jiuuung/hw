@@ -1,34 +1,27 @@
-import { Space, User } from '@prisma/client';
-import {
-  IsBoolean,
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  ValidateIf,
-} from 'class-validator';
-import { UserAuthorDto } from 'src/users/dto/users.return.dto';
+import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
+import { UserReturnAuthorDTO } from 'src/users/dto/users.return.dto';
 
-export class MakePostReturnDto {
+export class PostReturnMakeDTO {
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  author: UserAuthorDto;
+  author: UserReturnAuthorDTO;
 
   space: { name: string };
 }
 
-export class MakePostUserReturnDto extends MakePostReturnDto {
+export class PostReturnUserMakeDTO extends PostReturnMakeDTO {
   @IsBoolean()
   isAnonymous: boolean;
 }
 
-export class MakePostAdminReturnDto extends MakePostReturnDto {
+export class PostReturnAdminMakeDTO extends PostReturnMakeDTO {
   @IsBoolean()
   isNotice: boolean;
 }
 
-export class PostAnonymousReturnDto {
+export class PostReturnAnonymousDTO {
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -44,7 +37,7 @@ export class PostAnonymousReturnDto {
   isAnonymous: boolean;
 }
 
-export class PostAllReturnDto {
+export class PostReturnDTO {
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -54,7 +47,7 @@ export class PostAllReturnDto {
   content: string;
 
   @IsNotEmpty()
-  author: UserAuthorDto;
+  author: UserReturnAuthorDTO;
 
   @IsString()
   fileurl: string;
@@ -65,16 +58,16 @@ export class PostAllReturnDto {
   @IsBoolean()
   isAnonymous: boolean;
 }
-export class Empty {
+export class PostReturnEmptyDTO {
   @IsBoolean()
   anonymous: boolean;
 }
-export class PostListReturn {
+export class PostReturnListDTO {
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  author: UserAuthorDto | Empty;
+  author: UserReturnAuthorDTO | PostReturnEmptyDTO;
 
   @IsBoolean()
   isNotice: boolean;

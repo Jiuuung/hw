@@ -1,8 +1,17 @@
 import { PickType } from '@nestjs/swagger';
 import { Auth } from '@prisma/client';
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class MakeSpaceDto {
+export class SpaceRequestChangeRoleDTO {
+  @IsNumber()
+  @IsNotEmpty()
+  userId: number;
+
+  @IsString()
+  @IsNotEmpty()
+  role: string;
+}
+export class SpaceRequestMakeDTO {
   @IsString()
   @IsNotEmpty()
   spacename: string;
@@ -19,7 +28,7 @@ export class MakeSpaceDto {
   my_role: string;
 }
 
-export class SpaceJoinBodyDto {
+export class SpaceRequestJoinDTO {
   @IsString()
   @IsNotEmpty()
   spacename: string;
@@ -33,14 +42,14 @@ export class SpaceJoinBodyDto {
   rolename: string;
 }
 
-export class SpaceUserRoleBodyDto extends PickType(SpaceJoinBodyDto, [
+export class SpaceRequestUserRoleDTO extends PickType(SpaceRequestJoinDTO, [
   'spacename',
   'rolename',
 ] as const) {}
 
-export class SpaceMakeRoleBodyDto extends SpaceUserRoleBodyDto {
+export class SpaceRequestMakeRoleDTO extends SpaceRequestUserRoleDTO {
   @IsNotEmpty()
   auth: Auth;
 }
 
-export class SpaceDeleteRoleBodyDto extends SpaceMakeRoleBodyDto {}
+export class SpaceRequestDeleteRoleDTO extends SpaceRequestUserRoleDTO {}

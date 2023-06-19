@@ -1,11 +1,11 @@
 import { jwtConstants } from './constants';
-import { IsEmail } from 'class-validator';
 import { UserRepository } from '../users/users.repository';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { LoginRequestDto } from './dto/login.request.dto';
+import { AuthRequestUserLoginDTO } from './dto/login.request.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Payload } from './jwt/jwt.payload';
+import { AuthReturnTokensDTO } from './dto/login.return.dto';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +14,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async jwtLogin(data: LoginRequestDto): Promise<Tokens> {
+  async jwtLogin(data: AuthRequestUserLoginDTO): Promise<AuthReturnTokensDTO> {
     const { email, password } = data;
     const user = await this.userRepository.findByEmailWithPassword(email);
     if (!user) {
@@ -51,7 +51,7 @@ export class AuthService {
   async getAccessToken(payload: Payload): Promise<string> {
     const access_token = await this.jwtService.signAsync(payload, {
       secret: jwtConstants.access_secret,
-      expiresIn: '30m',
+      expiresIn: '1h',
     });
     return access_token;
   }

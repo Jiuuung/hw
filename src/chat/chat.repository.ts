@@ -1,9 +1,7 @@
-import { ChangeRoleDto } from './../space/dto/space.changerole.dto';
-import { SpaceCodeManagerReturnDto } from './../space/dto/space.return.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Auth, Chat } from '@prisma/client';
-import { ChatAllReturnDto } from './dto/chat.return.dto';
+import { Chat } from '@prisma/client';
+import { ChatReturnDTO } from './dto/chat.return.dto';
 
 @Injectable()
 export class ChatRepository {
@@ -167,7 +165,7 @@ export class ChatRepository {
   async listChatAdmin(
     postId: number,
     spacename: string,
-  ): Promise<ChatAllReturnDto[]> {
+  ): Promise<ChatReturnDTO[]> {
     const postList = await this.prismaService.chat.findMany({
       where: { spacename: spacename, postId: postId, isDeleted: false },
       select: {
@@ -193,7 +191,7 @@ export class ChatRepository {
     postId: number,
     spacename: string,
     email: string,
-  ): Promise<ChatAllReturnDto[]> {
+  ): Promise<ChatReturnDTO[]> {
     const chatListNotAnon = await this.prismaService.chat.findMany({
       where: {
         spacename: spacename,
@@ -252,7 +250,7 @@ export class ChatRepository {
     });
     return chat ? true : false;
   }
-  async editChat(content: string, chatId: number): Promise<ChatAllReturnDto> {
+  async editChat(content: string, chatId: number): Promise<ChatReturnDTO> {
     const chat = await this.prismaService.chat.update({
       where: { validchat: { id: chatId, isDeleted: false } },
       data: { content: content },

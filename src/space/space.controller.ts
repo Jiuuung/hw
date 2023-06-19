@@ -1,5 +1,3 @@
-import { Space, User } from '@prisma/client';
-import { AuthService } from './../auth/auth.service';
 import {
   Body,
   Controller,
@@ -13,43 +11,41 @@ import {
   Delete,
 } from '@nestjs/common';
 import {
-  MakeSpaceDto,
-  SpaceDeleteRoleBodyDto,
-  SpaceJoinBodyDto,
-  SpaceMakeRoleBodyDto,
-  SpaceUserRoleBodyDto,
+  SpaceRequestMakeDTO,
+  SpaceRequestJoinDTO,
+  SpaceRequestUserRoleDTO,
+  SpaceRequestMakeRoleDTO,
+  SpaceRequestDeleteRoleDTO,
+  SpaceRequestChangeRoleDTO,
 } from './dto/space.request.dto';
 import { SpaceService } from './space.service';
 import { JwtAuthGuard } from 'src/auth/jwt/access.guard';
 import { Request } from 'express';
-import { ChangeRoleDto } from './dto/space.changerole.dto';
-import {
-  MkOrChangeRoleReturnDto,
-  SpaceCodeManagerReturnDto,
-  SpaceCreateReturnDto,
-  SpaceJoinReturnDto,
-} from './dto/space.return.dto';
-import { UserReturnDto } from 'src/users/dto/users.return.dto';
+import { UserReturnDTO } from 'src/users/dto/users.return.dto';
 import { AuthorizationUserGuard } from 'src/auth/jwt/authorizationuser.guard';
 import { AuthorizationAdminGuard } from 'src/auth/jwt/authorizationadmin.guard';
+import {
+  SpaceReturnCreateDTO,
+  SpaceReturnJoinDTO,
+  SpaceReturnMkOrChangeRoleDTO,
+} from './dto/space.return.dto';
+import { UserRequest } from 'src/common/decorator/common.decorator';
+import { CommonRequestUserDTO } from 'src/common/dto/common.request.dto';
 
 @Controller('space')
 export class SpaceController {
-  constructor(
-    private readonly spaceService: SpaceService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly spaceService: SpaceService) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('new/space/:spacename')
   async makeSpace(
-    @Body() body: MakeSpaceDto,
-    @Req() req: Request,
-  ): Promise<SpaceCreateReturnDto> {
+    @Body() body: SpaceRequestMakeDTO,
+    @UserRequest() user,
+  ): Promise<SpaceReturnCreateDTO> {
     if (body.manager_role.includes(body.my_role)) {
       return this.spaceService.makeSpace(
         body.spacename,
-        req.user,
+        user,
         body.manager_role,
         body.user_role,
         body.my_role,
@@ -63,34 +59,32 @@ export class SpaceController {
   @Get(':spacename')
   async checkCodeManager(
     @Param() params,
-    @Req() req,
-  ): Promise<SpaceCodeManagerReturnDto> {
-    return await this.spaceService.checkCodeManager(params.spacename, req.user);
+    @UserRequest() user,
+  ): Promise<string> {
+    return await this.spaceService.checkCodeManager(params.spacename, user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('exist/:spacename')
   async joinSpace(
-    @Body() body: SpaceJoinBodyDto,
-    @Req() req,
-  ): Promise<SpaceJoinReturnDto> {
+    @Body() body: SpaceRequestJoinDTO,
+    @UserRequest() user,
+  ): Promise<SpaceReturnJoinDTO> {
     return await this.spaceService.joinSpace(
       body.spacename,
       body.access_code,
       body.rolename,
-      req.user,
+      user,
     );
   }
 
   @UseGuards(AuthorizationUserGuard)
   @Get('users/role/:spacename')
   async userRoleInSpace(
-    @Body() body: SpaceUserRoleBodyDto,
-    @Req() req,
-  ): Promise<UserReturnDto[]> {
+    @Body() body: SpaceRequestUserRoleDTO,
+  ): Promise<UserReturnDTO[]> {
     //해당 공간 내에 해당 역할군에 포함되어 있는 유저들의 정보.
     return await this.spaceService.userRoleInSpace(
-      req.user,
       body.spacename,
       body.rolename,
     );
@@ -99,14 +93,14 @@ export class SpaceController {
   @UseGuards(AuthorizationAdminGuard)
   @Put('users/role/:spacename')
   async changeRoleInSpace(
-    @Body(new ParseArrayPipe({ items: ChangeRoleDto }))
-    userlist: ChangeRoleDto[],
-    @Req() req,
+    @Body(new ParseArrayPipe({ items: SpaceRequestChangeRoleDTO }))
+    userlist: SpaceRequestChangeRoleDTO[],
+    @UserRequest() user: CommonRequestUserDTO,
     @Param() params,
-  ): Promise<boolean> {
+  ): Promise<boolean[]> {
     return await this.spaceService.changeRoleInSpace(
       userlist,
-      req.user.email,
+      user.email,
       params.spacename,
     );
   }
@@ -114,28 +108,19 @@ export class SpaceController {
   @UseGuards(AuthorizationAdminGuard)
   @Post('new/role/:spacename')
   async makeNewRole(
-    @Body() body: SpaceMakeRoleBodyDto,
-    @Req() req,
-  ): Promise<MkOrChangeRoleReturnDto> {
+    @Body() body: SpaceRequestMakeRoleDTO,
+  ): Promise<SpaceReturnMkOrChangeRoleDTO> {
     return await this.spaceService.makeOrChangeRole(
       body.rolename,
       body.auth,
       body.spacename,
-      req.user.email,
     );
   }
 
   @UseGuards(AuthorizationAdminGuard)
-  @Delete('role/:spacenam')
-  async deleteRole(
-    @Body() body: SpaceDeleteRoleBodyDto,
-    @Req() req,
-  ): Promise<boolean> {
-    return await this.spaceService.deleteRole(
-      body.spacename,
-      body.rolename,
-      req.user.email,
-    );
+  @Delete('role/:spacename')
+  async deleteRole(@Body() body: SpaceRequestDeleteRoleDTO): Promise<boolean> {
+    return await this.spaceService.deleteRole(body.spacename, body.rolename);
   }
 
   @UseGuards(AuthorizationAdminGuard)

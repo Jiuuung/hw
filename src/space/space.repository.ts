@@ -1,44 +1,47 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Space, User, Role, Auth, Prisma, UsersInSpaces } from '@prisma/client';
-import { randomBytes } from 'crypto';
-import { ChangeRoleDto } from './dto/space.changerole.dto';
+import { Role, Auth } from '@prisma/client';
+import { UserReturnDTO } from 'src/users/dto/users.return.dto';
+import { SpaceRequestChangeRoleDTO } from './dto/space.request.dto';
 import {
-  IdReturnDto,
-  MkOrChangeRoleReturnDto,
-  SpaceAdminUserReturnDto,
-  SpaceCodeManagerReturnDto,
-  SpaceCreateReturnDto,
-  SpaceJoinReturnDto,
-  SpacePassIdDto,
-  SpaceReturnDto,
+  SpaceReturnAdminDTO,
+  SpaceReturnCreateDTO,
+  SpaceReturnDTO,
+  SpaceReturnIdDTO,
+  SpaceReturnJoinDTO,
+  SpaceReturnMkOrChangeRoleDTO,
 } from './dto/space.return.dto';
-import { UserReturnDto } from 'src/users/dto/users.return.dto';
 
 @Injectable()
 export class SpaceRepository {
   constructor(private prisma: PrismaService) {}
 
-  async getUserId(email: string): Promise<IdReturnDto> {
-    return this.prisma.user.findUnique({
-      where: { email: email },
-      select: { id: true },
-    });
+  async getUserId(email: string): Promise<number> {
+    return (
+      await this.prisma.user.findUnique({
+        where: { email: email },
+        select: { id: true },
+      })
+    )?.id;
   }
-  async getSpaceId(spacename: string): Promise<IdReturnDto> {
-    return this.prisma.space.findFirst({
-      where: { name: spacename, isDeleted: false },
-      select: { id: true },
-    });
+  async getSpaceId(spacename: string): Promise<number> {
+    return (
+      await this.prisma.space.findFirst({
+        where: { name: spacename, isDeleted: false },
+        select: { id: true },
+      })
+    )?.id;
   }
-  async getRoleId(name: string, spacename: string): Promise<IdReturnDto> {
-    return this.prisma.space.findFirst({
-      where: { name: spacename, isDeleted: false },
-      select: { id: true },
-    });
+  async getRoleId(name: string, spacename: string): Promise<number> {
+    return (
+      await this.prisma.role.findFirst({
+        where: { name: name, spacename: spacename, isDeleted: false },
+        select: { id: true },
+      })
+    )?.id;
   }
 
-  async findSpaceByName(name: string): Promise<SpaceReturnDto | null> {
+  async findSpaceByName(name: string): Promise<SpaceReturnDTO | null> {
     const space = this.prisma.space.findFirst({
       where: { name: name, isDeleted: false },
       select: { id: true, name: true, users: true },
@@ -53,20 +56,21 @@ export class SpaceRepository {
     const role = userinspace.role;
     return role;
   }
-  async checkCodeManager(id: number): Promise<SpaceCodeManagerReturnDto> {
-    const code = await this.prisma.space.findFirst({
-      where: { id: id, isDeleted: false },
-      select: { access_code_manager: true },
-    });
-    return code;
+  async checkCodeManager(id: number): Promise<string> {
+    return (
+      await this.prisma.space.findFirst({
+        where: { id: id, isDeleted: false },
+        select: { access_code_manager: true },
+      })
+    ).access_code_manager;
   }
   async createSpace(
     name: string,
-    cur_user: UserReturnDto,
+    cur_user: UserReturnDTO,
     manager_role: string[],
     user_role: string[],
     my_role: string,
-  ): Promise<SpaceCreateReturnDto> {
+  ): Promise<SpaceReturnCreateDTO> {
     const isExist = await this.findSpaceByName(name);
     if (isExist) {
       throw new UnauthorizedException('space name alerady exists');
@@ -135,8 +139,8 @@ export class SpaceRepository {
     name: string,
     code: string,
     rolename: string,
-    user: UserReturnDto,
-  ): Promise<SpaceJoinReturnDto> {
+    user: UserReturnDTO,
+  ): Promise<SpaceReturnJoinDTO> {
     let role = true;
     let tar_space = await this.prisma.space.findFirst({
       where: {
@@ -204,7 +208,7 @@ export class SpaceRepository {
   async isUserInSpacePassId(
     email: string,
     spacename: string,
-  ): Promise<SpacePassIdDto | null> {
+  ): Promise<SpaceReturnIdDTO | null> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { email: email },
     });
@@ -221,7 +225,7 @@ export class SpaceRepository {
   async GetAdminUserInSpace(
     email: string,
     spacename: string,
-  ): Promise<SpaceAdminUserReturnDto | null> {
+  ): Promise<SpaceReturnAdminDTO | null> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { email: email },
     });
@@ -239,7 +243,7 @@ export class SpaceRepository {
   async allUsersWithRole(
     rolename: string,
     spacename: string,
-  ): Promise<UserReturnDto[]> {
+  ): Promise<UserReturnDTO[]> {
     const users = await this.prisma.user.findMany({
       where: {
         spaces: {
@@ -249,7 +253,7 @@ export class SpaceRepository {
       select: {
         id: true,
         email: true,
-        password: true,
+        password: false,
         first_name: true,
         last_name: true,
         imgUrl: true,
@@ -263,7 +267,7 @@ export class SpaceRepository {
     rolename: string,
     auth: Auth,
     spacename: string,
-  ): Promise<MkOrChangeRoleReturnDto> {
+  ): Promise<SpaceReturnMkOrChangeRoleDTO> {
     return await this.prisma.role.upsert({
       where: { roleinspace: { name: rolename, spacename: spacename } },
       update: { auth: auth },
@@ -273,39 +277,44 @@ export class SpaceRepository {
   }
 
   async changeRole(
-    userlist: ChangeRoleDto[],
+    userlist: SpaceRequestChangeRoleDTO[],
     spacename: string,
     spaceAndrole: { spaceId: number; roleId: number },
-  ): Promise<boolean> {
-    userlist.forEach(async (user) => {
-      const checkvaliduser = await this.prisma.usersInSpaces.findFirst({
-        where: {
-          userId: user.userId,
-          spaceId: spaceAndrole.spaceId,
-        },
-      });
-      const checkvalidrole = await this.prisma.role.findUnique({
-        where: {
-          roleinspace: { name: user.role, spacename: spacename },
-        },
-      });
-      if (checkvalidrole && checkvaliduser) {
-        const roleId = await this.getRoleId(user.role, spacename);
-        await this.prisma.usersInSpaces.update({
+  ): Promise<boolean[]> {
+    const result = await Promise.all(
+      userlist.map(async (user) => {
+        const checkvaliduser = await this.prisma.usersInSpaces.findFirst({
           where: {
-            userspace: { userId: user.userId, spaceId: spaceAndrole.spaceId },
+            userId: user.userId,
+            spaceId: spaceAndrole.spaceId,
           },
-          data: { roleId: roleId.id },
         });
-      }
-    });
-    return true;
+        const checkvalidrole = await this.prisma.role.findUnique({
+          where: {
+            roleinspace: { name: user.role, spacename: spacename },
+          },
+        });
+        if (checkvalidrole && checkvaliduser) {
+          const roleId = await this.getRoleId(user.role, spacename);
+          await this.prisma.usersInSpaces.update({
+            where: {
+              userspace: { userId: user.userId, spaceId: spaceAndrole.spaceId },
+            },
+            data: { roleId: roleId },
+          });
+          return true;
+        }
+        return false;
+      }),
+    );
+    return result;
   }
 
   async deleteRole(spacename: string, rolename: string): Promise<boolean> {
-    const roleId = await this.getRoleId(spacename, rolename);
-    const remainUser = this.prisma.usersInSpaces.findFirst({
-      where: { role: roleId },
+    const roleId = await this.getRoleId(rolename, spacename);
+    if (!roleId) throw new UnauthorizedException('role is not in space');
+    const remainUser = await this.prisma.usersInSpaces.findFirst({
+      where: { roleId: roleId },
     });
     if (remainUser) {
       throw new UnauthorizedException(

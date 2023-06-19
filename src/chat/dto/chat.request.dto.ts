@@ -8,7 +8,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 
-export class ChatMakeDto {
+export class ChatRequestMakeDTO {
   @IsString()
   @IsNotEmpty()
   content: string;
@@ -29,7 +29,7 @@ export class ChatMakeDto {
   chatId: number | null;
 }
 
-export class ChatListDto extends PickType(ChatMakeDto, [
+export class ChatRequestListDTO extends PickType(ChatRequestMakeDTO, [
   'spacename',
   'postId',
 ] as const) {
@@ -37,6 +37,6 @@ export class ChatListDto extends PickType(ChatMakeDto, [
   auth: Auth;
 }
 
-export class ChatEditDto extends ChatMakeDto {}
+export class ChatRequestEditDTO extends ChatRequestMakeDTO {}
 
-export class ChatDeleteDto extends ChatMakeDto {}
+export class ChatRequestDeleteDTO extends ChatRequestMakeDTO {}

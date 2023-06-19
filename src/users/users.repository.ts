@@ -1,25 +1,24 @@
-import { UserFindInputDto } from './dto/users.request.dto';
 import {
-  UserReturnDto,
-  UserCreateReturnDto,
-  UserDeleteInputDto,
-  UserDeleteReturnDto,
-  UserRefreshTokenUpdateDto,
-  UserReturnDtoWithPasswordDto,
-  UserFindDto,
-} from './dto/users.return.dto';
-import { RefreshTokenStrategy } from './../auth/jwt/refresh.strategy';
+  UserRequestNameDTO,
+  UserRequestSignupDTO,
+} from './dto/users.request.dto';
 import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { User, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UserRequestDto } from 'src/users/dto/users.request.dto';
+import { AuthRequestUserDTO } from 'src/auth/dto/login.request.dto';
+import {
+  UserReturnDTO,
+  UserReturnFindDTO,
+  UserReturnCreateDTO,
+  UserReturnDeleteDTO,
+  UserReturnWithPasswordDTO,
+} from './dto/users.return.dto';
 
 @Injectable()
 export class UserRepository {
   constructor(private prisma: PrismaService) {}
 
-  async findUsers(body: UserFindInputDto): Promise<UserFindDto[]> {
+  async findUsers(body: UserRequestNameDTO): Promise<UserReturnFindDTO[]> {
     return await this.prisma.user.findMany({
       where: { first_name: body.first_name, last_name: body.last_name },
       select: { first_name: true, last_name: true, imgUrl: true },
@@ -27,7 +26,7 @@ export class UserRepository {
   }
   async findByEmailWithPassword(
     email: string,
-  ): Promise<UserReturnDtoWithPasswordDto | null> {
+  ): Promise<UserReturnWithPasswordDTO | null> {
     const user = await this.prisma.user.findUnique({
       where: { email },
       select: {
@@ -42,7 +41,7 @@ export class UserRepository {
     });
     return user;
   }
-  async findByEmail(email: string): Promise<UserReturnDto | null> {
+  async findByEmail(email: string): Promise<UserReturnDTO | null> {
     const user = await this.prisma.user.findUnique({
       where: { email },
       select: {
@@ -56,7 +55,7 @@ export class UserRepository {
     });
     return user;
   }
-  async findUserWithoutPassword(id: number): Promise<UserReturnDto | null> {
+  async findUserWithoutPassword(id: number): Promise<UserReturnDTO | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -71,7 +70,7 @@ export class UserRepository {
     return user;
   }
 
-  async create(user: UserRequestDto): Promise<UserCreateReturnDto> {
+  async create(user: UserRequestSignupDTO): Promise<UserReturnCreateDTO> {
     const { email, first_name, last_name, password } = user;
     return await this.prisma.user.create({
       select: { email: true, first_name: true, last_name: true },
@@ -79,7 +78,7 @@ export class UserRepository {
     });
   }
 
-  async delete(users: UserDeleteInputDto): Promise<UserDeleteReturnDto> {
+  async delete(users: AuthRequestUserDTO): Promise<UserReturnDeleteDTO> {
     await this.prisma.usersInSpaces.deleteMany({ where: { userId: users.id } });
     return await this.prisma.user.delete({
       where: { id: users.id },

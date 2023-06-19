@@ -24,7 +24,7 @@ export class PostDeleteGuard extends AuthGuard('jwt') implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user as { email: string };
     const space = request.params.spacename;
-    const postId = request.params.postid;
+    const postId = parseInt(request.params.postid);
     if (!space) {
       throw new UnauthorizedException('no spacename in params');
     }
@@ -46,6 +46,7 @@ export class PostDeleteGuard extends AuthGuard('jwt') implements CanActivate {
         user.email,
       );
       if (checkUserRoleInSpace.auth === Auth.ADMIN || isAuthor === true) {
+        request.auth = checkUserRoleInSpace.auth;
         return true;
       } else {
         return false;

@@ -1,11 +1,11 @@
 import { PostService } from './post.service';
-import { AdminPostDto, PostEditDto } from './dto/post.admin.dto';
 import {
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Req,
@@ -16,24 +16,26 @@ import {
 import { HttpExceptionFilter } from 'src/common/exception/http-exception.filter';
 import { ScuccessInterceptor } from 'src/common/interceptor/success.interceptor';
 import { Request } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt/access.guard';
 import {
-  MakePostAdminReturnDto,
-  MakePostUserReturnDto,
-  PostAllReturnDto,
-  PostAnonymousReturnDto,
-  PostListReturn,
+  PostReturnAdminMakeDTO,
+  PostReturnUserMakeDTO,
+  PostReturnDTO,
+  PostReturnAnonymousDTO,
+  PostReturnListDTO,
 } from './dto/post.return.dto';
-import { AuthorizationUserGuard } from 'src/auth/jwt/authorizationuser.guard';
 import { UserRoleGuard } from 'src/auth/jwt/authorole.guard';
 import {
+  AuthRequest,
   UserAdminDisting,
   UserRequest,
 } from '../common/decorator/common.decorator';
-import { PostDto } from './dto/post.user.dto';
 import { Auth } from '@prisma/client';
-import { RequestUserDto } from 'src/common/dto/common.dto';
+import { CommonRequestUserDTO } from 'src/common/dto/common.request.dto';
 import { PostDeleteGuard } from 'src/auth/jwt/postdelete.guard';
+import {
+  PostRequestAdminEditDTO,
+  PostRequestUserDTO,
+} from './dto/post.request.dto';
 
 @Controller('post')
 @UseInterceptors(ScuccessInterceptor)
@@ -45,9 +47,9 @@ export class PostController {
   @Post('/:spacename')
   async makePost(
     @Param() param,
-    @UserAdminDisting() body: PostDto,
+    @UserAdminDisting() body: PostRequestUserDTO,
     @Req() req: Request,
-  ): Promise<MakePostUserReturnDto | MakePostAdminReturnDto> {
+  ): Promise<PostReturnUserMakeDTO | PostReturnAdminMakeDTO> {
     if (body.auth === Auth.ADMIN) {
       return await this.postService.makeAdminPost(
         param.spacename,
@@ -69,8 +71,8 @@ export class PostController {
   async listPost(
     @Param() param,
     @UserAdminDisting() body,
-    @UserRequest() req: RequestUserDto,
-  ): Promise<PostListReturn[]> {
+    @UserRequest() req: CommonRequestUserDTO,
+  ): Promise<PostReturnListDTO[]> {
     return await this.postService.listPost(
       param.spacename,
       body.auth,
@@ -83,27 +85,25 @@ export class PostController {
   async seePost(
     @Param() param,
     @UserAdminDisting() body,
-    @UserRequest() req: RequestUserDto,
-  ): Promise<PostAnonymousReturnDto | PostAllReturnDto | null> {
-    return await this.postService.seePost(
-      param.spacename,
-      param.postid,
-      req.email,
-      body.auth,
-    );
+    @UserRequest() req: CommonRequestUserDTO,
+  ): Promise<PostReturnAnonymousDTO | PostReturnDTO | null> {
+    return await this.postService.seePost(param.postid, req.email, body.auth);
   }
   @UseGuards(PostDeleteGuard)
   @Patch('/:spacename/:postid')
   async editPost(
-    @Param() param,
-    @Body() body: PostEditDto,
-  ): Promise<PostAllReturnDto> {
-    return await this.postService.editPost(body, param.postid);
+    @AuthRequest() auth: Auth,
+    @Param()
+    param,
+    @Body() body: PostRequestAdminEditDTO,
+  ): Promise<PostReturnDTO> {
+    return await this.postService.editPost(auth, body, param.postid);
   }
+
   @UseGuards(PostDeleteGuard)
   @Delete('/:spacename/:postid')
-  async deletePost(@Param() param): Promise<boolean> {
-    await this.postService.deletePost(param.postid);
+  async deletePost(@Param('postid', ParseIntPipe) id): Promise<boolean> {
+    await this.postService.deletePost(id);
     return true;
   }
 }

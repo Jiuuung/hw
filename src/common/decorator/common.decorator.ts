@@ -1,7 +1,4 @@
-import { AdminPostDto } from '../../post/dto/post.admin.dto';
-import { PostDto } from '../../post/dto/post.user.dto';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { Auth } from '@prisma/client';
 
 export const UserAdminDisting = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
@@ -18,6 +15,14 @@ export const UserRequest = createParamDecorator(
     const request = ctx.switchToHttp().getRequest();
     const user = request.user;
     return user;
+  },
+);
+
+export const AuthRequest = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    const auth = request.auth;
+    return auth;
   },
 );
 

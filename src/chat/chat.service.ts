@@ -1,8 +1,8 @@
-import { ChatAllReturnDto } from './dto/chat.return.dto';
+import { ChatReturnDTO } from './dto/chat.return.dto';
 import { ChatRepository } from './chat.repository';
 import { Injectable } from '@nestjs/common';
-import { ChatEditDto, ChatListDto } from './dto/chat.request.dto';
-import { RequestUserDto } from 'src/common/dto/common.dto';
+import { ChatRequestEditDTO, ChatRequestListDTO } from './dto/chat.request.dto';
+import { CommonRequestUserDTO } from 'src/common/dto/common.request.dto';
 import { Auth } from '@prisma/client';
 
 @Injectable()
@@ -30,9 +30,9 @@ export class ChatService {
   }
 
   async listChat(
-    body: ChatListDto,
-    user: RequestUserDto,
-  ): Promise<ChatAllReturnDto[]> {
+    body: ChatRequestListDTO,
+    user: CommonRequestUserDTO,
+  ): Promise<ChatReturnDTO[]> {
     console.log(body);
     if (body.auth === Auth.ADMIN) {
       return await this.chatRepository.listChatAdmin(
@@ -48,14 +48,11 @@ export class ChatService {
     }
   }
 
-  async editChat(
-    body: ChatEditDto,
-    user: RequestUserDto,
-  ): Promise<ChatAllReturnDto> {
+  async editChat(body: ChatRequestEditDTO): Promise<ChatReturnDTO> {
     return await this.chatRepository.editChat(body.content, body.chatId);
   }
 
-  async deleteChat(body: ChatEditDto, user: RequestUserDto): Promise<boolean> {
+  async deleteChat(body: ChatRequestEditDTO): Promise<boolean> {
     return await this.chatRepository.deleteChat(body.chatId);
   }
 }

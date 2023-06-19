@@ -5,6 +5,7 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 import { jwtConstants } from '../constants';
 import { Request } from 'express';
 import * as argon2 from 'argon2';
+import { AuthReturnUserInfoDTO } from '../dto/login.return.dto';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -29,7 +30,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
       email: string;
       sub: number;
     },
-  ): Promise<AuthUserInfo> {
+  ): Promise<AuthReturnUserInfoDTO> {
     const refreshToken = req?.cookies?.jwt;
     const user = await this.userRepository.findUserWithoutPassword(payload.sub);
     if (!user || !user.refresh_token) {
